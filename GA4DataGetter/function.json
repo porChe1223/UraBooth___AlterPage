@@ -25,7 +25,7 @@
       "name": "outputDocument",
       "databaseName": "GA4info",
       "containerName": "container-1",
-      "connectionStringSetting": "CosmosDbConnectionSetting"
+      "connectionStringSetting": "COSMOS_DB_CONNECTION_STRING"
     }
   ]
 }
