@@ -4,6 +4,7 @@ import json
 import os
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta.types import RunReportRequest, DateRange, Dimension, Metric, OrderBy
+import concurrent.futures
 
 
 ###########################
@@ -40,43 +41,55 @@ ORDER_BY_METRIC = None # 並び替えのメトリクス
 LIMIT = 10000000000 # 結果の制限数
 
 def get_ga4_report(start_date, end_date, dimensions, metrics, order_by_metric, limit=100000):
+    def fetch_report(dimension, metric):
+        dim = [Dimension(name=dimension)]
+        met = [Metric(name=metric)]
+
+        # OrderByメトリクスが必要な場合は以下を追加
+        # # OrderByメトリクスが現在のメトリクスに含まれていない場合
+        # if order_by_metric and order_by_metric != metric:
+        #     met.append(Metric(name=order_by_metric))
+
+        # order_by = None
+        # if order_by_metric:
+        #     order_by = [OrderBy(metric=OrderBy.MetricOrderBy(metric_name=order_by_metric), desc=True)]
+        
+        request = RunReportRequest(
+            property=f"properties/{PROPERTY_ID}",
+            date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+            dimensions=dim,
+            metrics=met,
+            order_bys=None,
+            limit=limit,
+        )
+        try:
+            response = client.run_report(request)
+            return (response, dimension, metric)
+        except Exception as e:
+            return (None, dimension, metric)
+        
     try:
         # クライアントの初期化
         client = BetaAnalyticsDataClient.from_service_account_file(KEY_FILE_LOCATION)
 
         results = []
 
-        for dimension in dimensions:
-            for metric in metrics:
-                dim = [Dimension(name=dimension)]
-                met = [Metric(name=metric)]
-
-                # OrderByメトリクスが必要な場合は以下を追加
-                # # OrderByメトリクスが現在のメトリクスに含まれていない場合
-                # if order_by_metric and order_by_metric != metric:
-                #     met.append(Metric(name=order_by_metric))
-
-                # order_by = None
-                # if order_by_metric:
-                #     order_by = [OrderBy(metric=OrderBy.MetricOrderBy(metric_name=order_by_metric), desc=True)]
-                
-                request = RunReportRequest(
-                    property=f"properties/{PROPERTY_ID}",
-                    date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
-                    dimensions=dim,
-                    metrics=met,
-                    order_bys=None,
-                    limit=limit,
-                )
-
-                try:
-                    response = client.run_report(request)
-                    results.append(response)
-                    logging.info(f'レポート取得成功: Dimension: {dimension}, Metric: {metric}')
-                except Exception as e:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(fetch_report, dimension, metric) for dimension in dimensions for metric in metrics]
+            for future in concurrent.futures.as_completed(futures):
+                result, dimension, metric = future.result()
+                if result == None:
+                    # logging.info(results)
                     logging.error(f'組合せ互換性なし: Dimension: {dimension}, Metric: {metric}')
-                    continue
-
+                else:
+                    results.append(result)
+                    # logging.info(result)
+                    logging.info('レポート取得成功: Dimension: %s, Metric: %s', dimension, metric)
+                    # break
+                    # results.append(result)
+                    # logging.info(results)
+                    # logging.info(f'レポート取得成功: Dimension: {dimension}, Metric: {metric}')
+        print(results)
         return results
     
     except Exception as e:
@@ -89,15 +102,27 @@ def get_ga4_report(start_date, end_date, dimensions, metrics, order_by_metric, l
 # レポート情報をJSON型に変換 #
 ############################
 
-def format_response_as_json(response):
+def format_response_as_json(responses):
     try:
         result = []
-        for row in response.rows:
-            data = {
-                "dimensions": {dim_name: dim_value.value for dim_name, dim_value in zip([dim.name for dim in response.dimension_headers], row.dimension_values)},
-                "metrics": {metric_name: metric_value.value for metric_name, metric_value in zip([metric.name for metric in response.metric_headers], row.metric_values)}
-            }
-            result.append(data)
+
+        def process_response(response):
+            for row in response.rows:
+                data = {
+                    "dimensions": {dim.name: dim_value.value for dim, dim_value in zip(response.dimension_headers, row.dimension_values)},
+                    "metrics": {metric.name: metric_value.value for metric, metric_value in zip(response.metric_headers, row.metric_values)}
+                }
+                result.append(data)
+        
+        # リストである場合
+        if isinstance(responses, list):
+            for response in responses:
+                process_response(response)
+
+        # 単一のRunReportResponseオブジェクトである場合
+        else:
+            process_response(responses)
+        
         return json.dumps(result, indent=4, ensure_ascii=False)
     
     except Exception as e:
