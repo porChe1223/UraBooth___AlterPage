@@ -13,6 +13,10 @@
     "version": "[4.*, 5.0.0)"
   },
   "extensions": {
+    "queues": {
+      "maxDequeueCount": 1,
+      "visibilityTimeout": "00:00:30"
+    },
     "http": {
       "routePrefix": ""
     }
