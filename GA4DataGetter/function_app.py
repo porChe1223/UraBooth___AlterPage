@@ -10,7 +10,7 @@ from google.analytics.data_v1beta.types import RunReportRequest, DateRange, Dime
 # GA4からのレポート情報取得 #
 ###########################
 # ディメンションとメトリクスの設定
-def makeList(textfile, ENVNAME):
+def make_list(textfile, ENVNAME):
     f = open(textfile, 'r') # ディメンション
     ENVNAME = []
     lists = f.readlines()
@@ -33,36 +33,51 @@ PROPERTY_ID = "469101596" # GA4のプロパティID
 
 START_DATE = "2022-12-28" # レポートの開始日
 END_DATE = "2024-12-30" # レポートの終了日
-DIMENSIONS = makeList('ga4_dimensions.txt', 'DIMENSIONS') # ディメンション
-METRICS= makeList('ga4_metrics.txt', 'METRICS') # メトリクス
-ORDER_BY_METRIC = "screenPageViews" # 並び替えのメトリクス
-LIMIT = 100000 # 結果の制限数
+DIMENSIONS = make_list('ga4_dimensions.txt', 'DIMENSIONS') # ディメンション
+METRICS= make_list('ga4_metrics.txt', 'METRICS') # メトリクス
+ORDER_BY_METRIC = None # 並び替えのメトリクス
+# ORDER_BY_METRIC = "screenPageViews" # 並び替えのメトリクスが必要な場合は設定
+LIMIT = 10000000000 # 結果の制限数
 
-def get_ga4_report(start_date, end_date, dimensions, metrics, order_by_metric=None, limit=100000):
+def get_ga4_report(start_date, end_date, dimensions, metrics, order_by_metric, limit=100000):
     try:
         # クライアントの初期化
         client = BetaAnalyticsDataClient.from_service_account_file(KEY_FILE_LOCATION)
 
-        # ディメンションとメトリクスをオブジェクト化
-        dimension_objects = [Dimension(name=dim) for dim in dimensions]
-        metric_objects = [Metric(name=metric) for metric in metrics]
+        results = []
 
-        # 並び替えの設定
-        order_by = None
-        if order_by_metric:
-            order_by = [OrderBy(metric=OrderBy.MetricOrderBy(metric_name=order_by_metric), desc=True)]
-        
-        # レポートリクエストの設定
-        request = RunReportRequest(
-            property=f"properties/{PROPERTY_ID}",
-            date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
-            dimensions=dimension_objects,
-            metrics=metric_objects,
-            order_bys=order_by,
-            limit=limit,
-        )
-        # レポートの取得
-        return client.run_report(request)
+        for dimension in dimensions:
+            for metric in metrics:
+                dim = [Dimension(name=dimension)]
+                met = [Metric(name=metric)]
+
+                # OrderByメトリクスが必要な場合は以下を追加
+                # # OrderByメトリクスが現在のメトリクスに含まれていない場合
+                # if order_by_metric and order_by_metric != metric:
+                #     met.append(Metric(name=order_by_metric))
+
+                # order_by = None
+                # if order_by_metric:
+                #     order_by = [OrderBy(metric=OrderBy.MetricOrderBy(metric_name=order_by_metric), desc=True)]
+                
+                request = RunReportRequest(
+                    property=f"properties/{PROPERTY_ID}",
+                    date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+                    dimensions=dim,
+                    metrics=met,
+                    order_bys=None,
+                    limit=limit,
+                )
+
+                try:
+                    response = client.run_report(request)
+                    results.append(response)
+                    logging.info(f'レポート取得成功: Dimension: {dimension}, Metric: {metric}')
+                except Exception as e:
+                    logging.error(f'組合せ互換性なし: Dimension: {dimension}, Metric: {metric}')
+                    continue
+
+        return results
     
     except Exception as e:
         logging.error(f'GA4レポート取得中にエラーが発生しました: {e}')
@@ -104,19 +119,22 @@ app = func.FunctionApp()
 def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage], outputDocument: func.Out[func.Document]) -> func.HttpResponse:
     try:
         # GA4からのレポート情報取得
+        logging.info('開始: レポート情報取得')
         response = get_ga4_report(START_DATE, END_DATE, DIMENSIONS, METRICS, ORDER_BY_METRIC, LIMIT)
-        logging.info('GAのレポート取得情報')
+        logging.info('終了: レポート情報取得')
 
         # レポート情報をJSON型に変換
+        logging.info('開始: Json化')
         results = format_response_as_json(response)
-        logging.info('レポート情報Json化')
+        logging.info('終了: Json化')
 
         # Cosmos DB に出力
+        logging.info('開始: CosmosDBに出力')
         outputDocument.set(func.Document.from_dict({"id": "report", "data": results}))
-        logging.info('CosmosDBに出力')
+        logging.info('終了: CosmosDBに出力')
 
         msg.set("Report processed")
-        logging.info('Queueにメッセージを送信')
+        logging.info('完了: Queueにメッセージを送信')
 
         # JSONレスポンスを返す
         return func.HttpResponse(results, status_code=200)
