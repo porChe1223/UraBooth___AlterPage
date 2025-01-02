@@ -11,7 +11,7 @@ Azure Functions: Download Remote Settings...
 
 #### 注意
 
-Python 3.11.10
+Python 3.11.11
 
 ## ローカルデバック
 
@@ -55,7 +55,7 @@ Azure Functions: Download Remote Settings...
 
 #### 注意
 
-Python 3.11.10
+Python 3.11.11
 
 ## ローカルデバック
 
@@ -81,17 +81,22 @@ Function App
 対象の関数を右クリック  
 Create Function App in Azure...
 
-<!-- # LLMDataAnalyzer
+# LLMDataAnalyzer
 
-## 手順
+## 環境構築
 
 - python3 -m venv venv
 - source venv/bin/activate
 - pip install -r requirements.txt
+
+### WindowsPC の場合
+
 - export FLASK_APP=app_analytics
 - set FLASK_APP=app_analytics
 - flask run
 
+### MacOS の場合
+
 #### 注意
 
-- Python 3.11.11 -->
+- Python 3.11.11
