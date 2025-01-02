@@ -2,7 +2,6 @@ import azure.functions as func
 import logging
 import json
 import os
-from dotenv import load_dotenv
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta.types import RunReportRequest, DateRange, Dimension, Metric, OrderBy
 
@@ -10,14 +9,23 @@ from google.analytics.data_v1beta.types import RunReportRequest, DateRange, Dime
 ###########################
 # GA4からのレポート情報取得 #
 ###########################
-load_dotenv()
+# ディメンションとメトリクスの設定
+def makeList(textfile, ENVNAME):
+    f = open(textfile, 'r') # ディメンション
+    ENVNAME = []
+    lists = f.readlines()
+    for list in lists:
+        list = list.strip()
+        ENVNAME.append(list)
 
-GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") # Google Cloudの認証情報設定
+    return ENVNAME
 
-if GOOGLE_APPLICATION_CREDENTIALS:
-    print(f"Google Cloud Credentials Path: {GOOGLE_APPLICATION_CREDENTIALS}")
-else:
-    print("環境変数 'GOOGLE_APPLICATION_CREDENTIALS' が設定されていません。")
+
+# GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") # Google Cloudの認証情報設定
+# if GOOGLE_APPLICATION_CREDENTIALS:
+#     print(f"Google Cloud Credentials Path: {GOOGLE_APPLICATION_CREDENTIALS}")
+# else:
+#     print("環境変数 'GOOGLE_APPLICATION_CREDENTIALS' が設定されていません。")
 
 KEY_FILE_LOCATION = "ga4account.json" # サービスアカウントJSONファイルのパス
 
@@ -25,8 +33,8 @@ PROPERTY_ID = "469101596" # GA4のプロパティID
 
 START_DATE = "2022-12-28" # レポートの開始日
 END_DATE = "2024-12-30" # レポートの終了日
-DIMENSIONS = ["pagePath", "pageTitle", "city", "country", "browser", "operatingSystem", "deviceCategory"]   # ディメンション
-METRICS = ["screenPageViews", "sessions", "totalUsers", "newUsers", "bounceRate", "averageSessionDuration"] # メトリクス
+DIMENSIONS = makeList('ga4_dimensions.txt', 'DIMENSIONS') # ディメンション
+METRICS= makeList('ga4_metrics.txt', 'METRICS') # メトリクス
 ORDER_BY_METRIC = "screenPageViews" # 並び替えのメトリクス
 LIMIT = 100000 # 結果の制限数
 
@@ -88,13 +96,13 @@ def format_response_as_json(response):
 ##############################
 
 app = func.FunctionApp()
-@app.function_name(name="InputGA4Info")
+@app.function_name(name="GA4DataGetter")
 @app.route(route="data", auth_level=func.AuthLevel.ANONYMOUS)
 @app.queue_output(arg_name="msg", queue_name="outqueue", connection='AzureWebJobsStorage')
 @app.cosmos_db_output(arg_name="outputDocument", database_name="my-database", container_name="my-container", connection='COSMOS_DB_CONNECTION_STRING')
 
 def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage], outputDocument: func.Out[func.Document]) -> func.HttpResponse:
-    try:                                                                                           # 結果の制限数
+    try:
         # GA4からのレポート情報取得
         response = get_ga4_report(START_DATE, END_DATE, DIMENSIONS, METRICS, ORDER_BY_METRIC, LIMIT)
         logging.info('GAのレポート取得情報')
