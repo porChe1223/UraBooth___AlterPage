@@ -12,13 +12,9 @@ app = func.FunctionApp()
 @app.function_name(name="GetDBInfo")
 @app.route(route="data", auth_level=func.AuthLevel.ANONYMOUS)
 def GetDBInfo(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info('Python HTTP trigger function processed a request.')
-
     # Cosmos DB から情報を取得
     try:
-        endpoint = COSMOS_DB_ENDPOINT
-        key = COSMOS_DB_KEY
-        client = CosmosClient(endpoint, key)
+        client = CosmosClient(COSMOS_DB_ENDPOINT, COSMOS_DB_KEY)
         database_name = "my-database"
         database = client.get_database_client(database_name)
 
@@ -30,20 +26,21 @@ def GetDBInfo(req: func.HttpRequest) -> func.HttpResponse:
 
         # 各コンテナからデータを取得
         for container_name in containers_names:
-            container = database.get_container_client(container_name)
-            
-            # クエリの実行
-            query = "SELECT * FROM c"
-            items = list(container.query_items(query, enable_cross_partition_query=True))
-            
-            # データを辞書に保存
+            container = database.get_container_client(container_name)    
+            items = list(container.read_all_items())
+            for item in items:
+                if 'data' in item and isinstance(item['data'], str):
+                    item['data'] = json.loads(item['data'])
             all_data[container_name] = items
 
         # データをHTTPレスポンスとして返す
-        return func.HttpResponse(json.dumps(all_data), status_code=200, mimetype="application/json")
+        response_data = json.dumps(all_data, ensure_ascii=False, indent=2)
+        return func.HttpResponse(response_data, status_code=200, mimetype="application/json", charset="utf-8")
+    
     except exceptions.CosmosHttpResponseError as e:
         logging.error(f'Cosmos DB error: {e}')
         return func.HttpResponse(f'Cosmos DB error: {e}', status_code=500)
+    
     except Exception as e:
         logging.error(f'Error: {e}')
         return func.HttpResponse(f'Error: {e}', status_code=500)
