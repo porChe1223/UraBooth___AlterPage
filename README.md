@@ -17,13 +17,21 @@ Python 3.11.11
 
 F5
 
-### 失敗時
+### トラブルシューティング
+
+#### 基本
 
 . .venv/bin/activate  
 pip install -r requirements.txt  
 func host start
 
-### ポートがすでに使われている場合
+#### Module Not Found
+
+rm -rf .venv  
+python3 -m venv .venv
+F5
+
+#### ポートがすでに使われている場合
 
 lsof -i  
 kill -9 <localhost:9091 の PID>
@@ -61,13 +69,21 @@ Python 3.11.11
 
 F5
 
-### 失敗時
+### トラブルシューティング
+
+#### 基本
 
 . .venv/bin/activate  
 pip install -r requirements.txt  
 func host start
 
-### ポートがすでに使われている場合
+#### Module Not Found
+
+rm -rf .venv  
+python3 -m venv .venv
+F5
+
+#### ポートがすでに使われている場合
 
 lsof -i  
 kill -9 <localhost:9091 の PID>
