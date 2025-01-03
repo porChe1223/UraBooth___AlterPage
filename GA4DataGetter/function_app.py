@@ -84,7 +84,7 @@ def get_ga4_report(start_date, end_date, dimensions, metrics, order_by_metric, l
                 else:
                     results.append(result)
                     # logging.info(result)
-                    logging.info('レポート取得成功: Dimension: %s, Metric: %s', dimension, metric)
+                    logging.info(f'レポート取得成功: Dimension: {dimension}, Metric: {metric}')
                     # break
                     # results.append(result)
                     # logging.info(results)
