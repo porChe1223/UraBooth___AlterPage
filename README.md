@@ -97,6 +97,29 @@ Function App
 対象の関数を右クリック  
 Create Function App in Azure...
 
+# Dify
+
+Dify で LLM ワークフロー作成  
+https://udify.app/chat/TAeetpmo7e9l1pYx
+
+## 環境構築
+
+Dify を開く(https://cloud.dify.ai/apps)  
+スタジオ  
+アプリを作成する  
+DSL ファイルをインポート  
+ディレクトリ内の yml ファイルを選択
+
+## yml ファイル保存
+
+タイトルをクリック  
+DSL をエクスポート
+
+## デプロイ
+
+公開する  
+アプリを実行
+
 # LLMDataAnalyzer
 
 ## 環境構築
