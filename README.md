@@ -43,7 +43,7 @@ RESOURCES
 Azure Subscription  
 Function App  
 対象の関数を右クリック  
-Create Function App in Azure...
+Deploy to Function App...
 
 ## その他
 
@@ -95,7 +95,7 @@ RESOURCES
 Azure Subscription  
 Function App  
 対象の関数を右クリック  
-Create Function App in Azure...
+Deploy to Function App...
 
 # Dify
 
@@ -142,7 +142,8 @@ DSL をエクスポート
 
 # Slackbot
 
-slackbot を作成して dify のチャットアプリでの応答を slack 上で表示
+Slack に Dify を Slackbot の形で利用  
+https://app.slack.com/client/T087FCDUFP0/C087K6KJ39B?ssb_vid=.0a757345d0fade9374201a02344da7ba&ssb_instance_id=2fc413fa-f60c-4fa8-a515-61ce8128e24d
 
 ## 環境構築
 
@@ -152,5 +153,5 @@ pip install -r requirements.txt
 
 ## デバック
 
-source venv/bin/activate
+source venv/bin/activate  
 python3 connect_dify.py
