@@ -139,3 +139,18 @@ DSL をエクスポート
 #### 注意
 
 - Python 3.11.11
+
+# Slackbot
+
+slackbot を作成して dify のチャットアプリでの応答を slack 上で表示
+
+## 環境構築
+
+.env ファイルを作成して環境変数を設定  
+python3 -m venv venv  
+pip install -r requirements.txt
+
+## デバック
+
+source venv/bin/activate
+python3 connect_dify.py
