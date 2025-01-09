@@ -32,7 +32,7 @@ KEY_FILE_LOCATION = "ga4account.json" # サービスアカウントJSONファイ
 
 PROPERTY_ID = "469101596" # GA4のプロパティID
 
-START_DATE = "2022-12-28" # レポートの開始日
+START_DATE = "2024-9-28" # レポートの開始日
 END_DATE = "2025-1-1" # レポートの終了日
 DATE_RANGE = START_DATE  + ' to ' + END_DATE # レポートの範囲(アイテムのIDに相当)
 DIMENSIONS = make_list('GA4DimensionsMain.txt', 'DIMENSIONS') # ディメンション
