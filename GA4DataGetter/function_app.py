@@ -33,10 +33,10 @@ KEY_FILE_LOCATION = "ga4account.json" # サービスアカウントJSONファイ
 PROPERTY_ID = "469101596" # GA4のプロパティID
 
 START_DATE = "2022-12-28" # レポートの開始日
-END_DATE = "2024-12-30" # レポートの終了日
+END_DATE = "2025-1-1" # レポートの終了日
 DATE_RANGE = START_DATE  + ' to ' + END_DATE # レポートの範囲(アイテムのIDに相当)
-DIMENSIONS = make_list('ga4_dimensions.txt', 'DIMENSIONS') # ディメンション
-METRICS= make_list('ga4_metrics.txt', 'METRICS') # メトリクス
+DIMENSIONS = make_list('GA4DimensionsMain.txt', 'DIMENSIONS') # ディメンション
+METRICS= make_list('GA4MetricsMain.txt', 'METRICS') # メトリクス
 ORDER_BY_METRIC = None # 並び替えのメトリクス
 # ORDER_BY_METRIC = "screenPageViews" # 並び替えのメトリクスが必要な場合は設定
 LIMIT = 10000000000 # 結果の制限数
