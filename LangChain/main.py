@@ -2,10 +2,8 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
-load_dotenv()
 
-#import os
-#OPENAI_API_KEY=os.getenv("OPENAI_API_KEY")
+load_dotenv()
 
 # テンプレート文章を定義し、プロンプトを作成
 prompt = ChatPromptTemplate.from_messages([
