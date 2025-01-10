@@ -120,7 +120,25 @@ DSL をエクスポート
 公開する  
 アプリを実行
 
-# LLMDataAnalyzer
+# LangChain
+
+## 環境構築  
+  
+- requirements.txtを作成し、以下を書き加える。openai以外のAIを使う場合は随時そのライブラリをインストールするよう書き換える。    
+```text
+langchain  
+langchain-openai  
+openai  
+python-dotenv  
+```
+- 仮想環境(venv)に移動する
+- `pip install -r requirements.txt`
+- `pip install langchain-community`
+- `pip install langchain-cli`
+- .envファイルを作成して、LLMのAPIキーを格納  
+
+
+
 
 ## 環境構築
 
@@ -155,3 +173,5 @@ pip install -r requirements.txt
 
 source venv/bin/activate  
 python3 connect_dify.py
+
+
