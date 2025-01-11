@@ -55,6 +55,24 @@ Deploy to Function App...
 Cosmos Database からのデータを取得する関数  
 https://cosmosdbdatagetter.azurewebsites.net/data
 
+## 使い方
+
+Method: Get
+
+### データの範囲指定がない場合
+
+コンテナ内にあるすべての情報が取得されます
+
+### ほしいデータの範囲を指定したいとき
+
+https://cosmosdbdatagetter.azurewebsites.net/data?=data_range=AAAA-BB-CC to XXXX-YY-ZZ
+
+### 今ある日付
+
+2022-12-28 to 2024-12-30  
+2022-12-28 to 2025-1-1  
+2024-9-28 to 2025-1-1
+
 ## 環境構築
 
 python3 -m venv .venv  
@@ -122,23 +140,22 @@ DSL をエクスポート
 
 # LangChain
 
-## 環境構築  
-  
-- requirements.txtを作成し、以下を書き加える。openai以外のAIを使う場合は随時そのライブラリをインストールするよう書き換える。    
+## 環境構築
+
+- requirements.txt を作成し、以下を書き加える。openai 以外の AI を使う場合は随時そのライブラリをインストールするよう書き換える。
+
 ```text
-langchain  
-langchain-openai  
-openai  
-python-dotenv  
+langchain
+langchain-openai
+openai
+python-dotenv
 ```
+
 - 仮想環境(venv)に移動する
 - `pip install -r requirements.txt`
 - `pip install langchain-community`
 - `pip install langchain-cli`
-- .envファイルを作成して、LLMのAPIキーを格納  
-
-
-
+- .env ファイルを作成して、LLM の API キーを格納
 
 ## 環境構築
 
@@ -173,5 +190,3 @@ pip install -r requirements.txt
 
 source venv/bin/activate  
 python3 connect_dify.py
-
-
