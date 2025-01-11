@@ -121,7 +121,7 @@ DSL をエクスポート
 アプリを実行
 
 # LangChain
-
+一方向に処理するワークフローを作成
 ## 環境構築  
   
 - requirements.txtを作成し、以下を書き加える。openai以外のAIを使う場合は随時そのライブラリをインストールするよう書き換える。    
@@ -137,7 +137,15 @@ python-dotenv
 - `pip install langchain-cli`
 - .envファイルを作成して、LLMのAPIキーを格納  
 
-
+# LangGraph
+巡回型のワークフローを作成可能
+## 環境構築
+- requirements.txtに以下を追加
+```text
+langgraph
+tavily-python #web情報の検索エンジンAPI(必要なら)
+```
+- .envファイルにTAVILYのAPIキーを格納
 
 
 ## 環境構築
