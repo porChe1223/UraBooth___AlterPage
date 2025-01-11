@@ -1,7 +1,7 @@
 import azure.functions as func
 import logging
 import json
-import os
+import datetime
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta.types import RunReportRequest, DateRange, Dimension, Metric, OrderBy
 import concurrent.futures
@@ -144,6 +144,20 @@ app = func.FunctionApp()
 
 def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage], outputDocument: func.Out[func.Document]) -> func.HttpResponse:
     try:
+        start = req.params.get('start')
+        end = req.params.get('end')
+
+        if not start or not end:
+            today = datetime.date.today()
+            last_month = today - datetime.timedelta(days=30)
+            START_DATE = str(today) # レポートの開始日(今日)
+            END_DATE = str(last_month) # レポートの終了日(1か月前)]
+            
+        if start and end:
+            START_DATE = start # レポートの開始日(指定日)
+            END_DATE = end # レポートの終了日(指定日)
+
+        DATE_RANGE = START_DATE  + ' to ' + END_DATE # レポートの範囲(アイテムのIDに相当)
         # GA4からのレポート情報取得
         logging.info('開始: レポート情報取得')
         response = get_ga4_report(START_DATE, END_DATE, DIMENSIONS, METRICS, ORDER_BY_METRIC, LIMIT)

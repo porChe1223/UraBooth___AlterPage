@@ -3,6 +3,18 @@
 Google Analytics からのデータを取得する関数  
 https://ga4datagetter.azurewebsites.net/data
 
+## 使い方
+
+Method: Get
+
+### データの範囲指定がない場合
+
+今日から 1 月前までのレポートが取得されます
+
+### ほしいデータの範囲を指定したいとき
+
+https://ga4datagetter.azurewebsites.net/data?start=AAAA-BB-CC,end=XXXX-YY-ZZ
+
 ## 環境構築
 
 python3 -m venv .venv  
@@ -65,7 +77,7 @@ Method: Get
 
 ### ほしいデータの範囲を指定したいとき
 
-https://cosmosdbdatagetter.azurewebsites.net/data?=data_range=AAAA-BB-CC to XXXX-YY-ZZ
+https://cosmosdbdatagetter.azurewebsites.net/data?data_range=AAAA-BB-CC to XXXX-YY-ZZ
 
 ### 今ある日付
 
