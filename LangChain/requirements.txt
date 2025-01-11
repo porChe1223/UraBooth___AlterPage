@@ -1,6 +1,8 @@
 langchain
+langchain-community
 langgraph
 langchain-openai
 openai
+# langchain-google-vertexai
 tavily-python
 python-dotenv
