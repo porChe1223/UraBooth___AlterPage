@@ -6,7 +6,7 @@ import os
 
 COSMOS_DB_ENDPOINT = os.getenv("COSMOS_DB_ENDPOINT")
 COSMOS_DB_KEY = os.getenv("COSMOS_DB_KEY")
-ITEM_ID = '2022-12-28 to 2025-1-1'
+ITEM_ID = '2022-9-28 to 2025-1-1'
 
 app = func.FunctionApp()
 
