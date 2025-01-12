@@ -9,24 +9,13 @@ from langchain.prompts.chat import (
 import os
 vitamin = os.getenv("OPENAI_API_KEY")
 
-llm = ChatOpenAI(model_name="gpt-4o-mini",temperature=0.5,openai_api_key=vitamin)
-
 def txt_read(txtfile):
     f = open(txtfile, "r")
     data = f.read()
     f.close()
     return data
 
-#システムプロンプトを読み込む
-system_prompt = txt_read("evaluationprompt.txt")
-
-# プロンプト評価のためのテンプレート
-evaluation_prompt = PromptTemplate(
-    input_variables=["user_prompt"],
-    template=system_prompt + "\n\nプロンプト: {user_prompt}\n\nプロンプトの評価:"
-)
-evaluation_chain = LLMChain(llm=llm, prompt=evaluation_prompt)
-
+llm = ChatOpenAI(model_name="gpt-4o-mini",temperature=0.5,openai_api_key=vitamin)
 data1 = txt_read("aboutalldata.txt")
 human_message_prompt_1 = HumanMessagePromptTemplate(
     prompt=PromptTemplate(
@@ -79,25 +68,11 @@ chain_5 = LLMChain(llm=llm, prompt=chat_prompt_template_5, output_key="answer")
 
 overall_chain = SequentialChain(
     chains=[chain_1, chain_2, chain_3, chain_4, chain_5],
-    input_variables=["user_input"],
+    input_variables=["question"],
     output_variables=["select_data", "analyze", "advice", "answer"],
     verbose=True,
 )
-
-def process_input(user_input: str):
-    # 入力文に「評価」という単語が含まれているかを確認
-    if "プロンプト" in user_input and "評価" in user_input:
-        print("プロンプトを評価します。")
-        # プロンプトの評価・改善を実行
-        response = evaluation_chain.invoke({"user_prompt": user_input})
-    else:
-        # 通常の処理を実行
-        response = overall_chain.invoke({"user_input": user_input})
-    
-    return response
-
-if __name__ == "__main__":
-    #user_input = "ブログの流入元について教えてください。(ここに質問を入力することになっています。)プロンプトを評価してください。"
-    user_input = "私のブログは旅行に関するもので、ターゲットオーディエンスは20代から30代の若者です。ブログの流入元として、SEO、SNS、リファラルの効果を比較したいです。各流入元の特徴をリスト形式で説明し、具体的なデータや事例を含めてください。また、流入元を改善するための新しいアイデアも提案してください。"
-    output = process_input(user_input)
-    print(output)
+output = overall_chain.invoke({
+    "question":"ブログの流入元について教えてください。(ここに質問を入力することになっています。)"
+})
+print(output)

@@ -10,14 +10,16 @@ from langgraph.prebuilt import ToolInvocation
 import json
 
 # モデルのセットアップ
-tools = [TavilySearchResults(max_results=1)]
+tools = [TavilySearchResults(max_results=1, tavily_api_key="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")]
 tool_executor = ToolExecutor(tools)
 
 # トークンをストリーミングするために streaming=True を設定します
 # これについての詳細はストリーミングセクションをご覧ください。
-model = ChatOpenAI(temperature=0, streaming=True)
+llm = ChatOpenAI(model_name="gpt-4o-mini",temperature=0.5,openai_api_key="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"
+,streaming=True)
+#model = ChatOpenAI(temperature=0, streaming=True)
 functions = [convert_to_openai_function(t) for t in tools]
-model = model.bind_functions(functions)
+model = llm.bind_functions(functions)
 
 class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], operator.add]
