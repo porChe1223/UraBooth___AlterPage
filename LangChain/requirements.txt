@@ -6,3 +6,4 @@ openai
 # langchain-google-vertexai
 tavily-python
 python-dotenv
+matplotlib
