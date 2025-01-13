@@ -4,22 +4,17 @@ import json
 import datetime
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta.types import RunReportRequest, DateRange, Dimension, Metric, OrderBy
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 ###########################
 # GA4からのレポート情報取得 #
 ###########################
-# ディメンションとメトリクスの設定
-def make_list(textfile, ENVNAME):
-    f = open(textfile, 'r') # ディメンション
-    ENVNAME = []
-    lists = f.readlines()
-    for list in lists:
-        list = list.strip()
-        ENVNAME.append(list)
-
-    return ENVNAME
+# ディメンションとメトリクスの読み込み
+def make_list(textfile):
+    with open(textfile, 'r') as f:
+        lists = f.readlines()
+    return [list.strip() for list in lists if list.strip()]
 
 
 # GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") # Google Cloudの認証情報設定
@@ -31,43 +26,36 @@ def make_list(textfile, ENVNAME):
 KEY_FILE_LOCATION = "ga4account.json" # サービスアカウントJSONファイルのパス
 
 PROPERTY_ID = "469101596" # GA4のプロパティID
-
-START_DATE = "2024-9-28" # レポートの開始日
-END_DATE = "2025-1-1" # レポートの終了日
-DATE_RANGE = START_DATE  + ' to ' + END_DATE # レポートの範囲(アイテムのIDに相当)
-DIMENSIONS = make_list('GA4DimensionsMain.txt', 'DIMENSIONS') # ディメンション
-METRICS= make_list('GA4MetricsMain.txt', 'METRICS') # メトリクス
+DIMENSIONS = make_list('GA4DimensionsMain.txt') # ディメンション
+METRICS= make_list('GA4MetricsMain.txt') # メトリクス
 ORDER_BY_METRIC = None # 並び替えのメトリクス
 # ORDER_BY_METRIC = "screenPageViews" # 並び替えのメトリクスが必要な場合は設定
-LIMIT = 10000000000 # 結果の制限数
+LIMIT = 1000 # 結果の制限数
 
 def get_ga4_report(start_date, end_date, dimensions, metrics, order_by_metric, limit=100000):
-    def fetch_report(dimension, metric):
-        dim = [Dimension(name=dimension)]
-        met = [Metric(name=metric)]
-
-        # OrderByメトリクスが必要な場合は以下を追加
-        # # OrderByメトリクスが現在のメトリクスに含まれていない場合
-        # if order_by_metric and order_by_metric != metric:
-        #     met.append(Metric(name=order_by_metric))
-
-        # order_by = None
-        # if order_by_metric:
-        #     order_by = [OrderBy(metric=OrderBy.MetricOrderBy(metric_name=order_by_metric), desc=True)]
-        
-        request = RunReportRequest(
-            property=f"properties/{PROPERTY_ID}",
-            date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
-            dimensions=dim,
-            metrics=met,
-            order_bys=None,
-            limit=limit,
-        )
+    def fetch_report(client, dimension, metric):
         try:
+            # 文字列をリストに変換
+            dimension_list = eval(dimension)
+            dim = [Dimension(name=dims) for dims in dimension_list]
+            met = [Metric(name=metric)]
+
+            # レポートリクエストの作成
+            request = RunReportRequest(
+                property=f"properties/{PROPERTY_ID}",
+                date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+                dimensions=dim,
+                metrics=met,
+                order_bys=None,
+                limit=limit,
+            )
+
+            # レポートの実行
             response = client.run_report(request)
-            return (response, dimension, metric)
+            return (response)
         except Exception as e:
-            return (None, dimension, metric)
+            logging.error(f"レポート取得中にエラーが発生しました: {e}")
+            return (None)
         
     try:
         # クライアントの初期化
@@ -75,27 +63,51 @@ def get_ga4_report(start_date, end_date, dimensions, metrics, order_by_metric, l
 
         results = []
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(fetch_report, dimension, metric) for dimension in dimensions for metric in metrics]
-            for future in concurrent.futures.as_completed(futures):
-                result, dimension, metric = future.result()
-                if result == None:
-                    # logging.info(results)
-                    logging.error(f'組合せ互換性なし: Dimension: {dimension}, Metric: {metric}')
+        for dimension in dimensions:
+            for metric in metrics:
+                response = fetch_report(client, dimension, metric)
+                if response:
+                    results.append(response)
+                    logging.info(f"レポート取得成功: Dimension: {dimension}, Metric: {metric}")
+                    logging.info(response)
                 else:
-                    results.append(result)
-                    # logging.info(result)
-                    logging.info(f'レポート取得成功: Dimension: {dimension}, Metric: {metric}')
-                    # break
-                    # results.append(result)
-                    # logging.info(results)
-                    # logging.info(f'レポート取得成功: Dimension: {dimension}, Metric: {metric}')
-        print(results)
+                    logging.error(f"組合せ互換性なし: Dimension: {dimension}, Metric: {metric}")
+
         return results
-    
     except Exception as e:
-        logging.error(f'GA4レポート取得中にエラーが発生しました: {e}')
+        logging.error(f"GA4レポート取得中にエラーが発生しました: {e}")
         raise
+
+    # try:
+    #     # クライアントの初期化
+    #     client = BetaAnalyticsDataClient.from_service_account_file(KEY_FILE_LOCATION)
+
+    #     results = []
+    #     futures = []
+
+    #     # ThreadPoolExecutorを使用して並列処理を実行
+    #     with ThreadPoolExecutor() as executor:
+    #         for dimension in dimensions:
+    #             for metric in metrics:
+    #                 futures.append(executor.submit(fetch_report, client, dimension, metric))
+
+    #         # 完了したタスクを順次処理
+    #         for future in as_completed(futures):
+    #             try:
+    #                 response = future.result()
+    #                 if response:
+    #                     results.append(response)
+    #                     logging.info(f"レポート取得成功: Dimension: {dimension}, Metric: {metric}")
+    #                     logging.info(response)
+    #                 else:
+    #                     logging.error(f"組合せ互換性なし: Dimension: {dimension}, Metric: {metric}")
+    #             except Exception as e:
+    #                 logging.error(f"エラーが発生しました: {e}")
+
+    #     return results
+    # except Exception as e:
+    #     logging.error(f"GA4レポート取得中にエラーが発生しました: {e}")
+    #     raise
 
 
 
@@ -108,6 +120,15 @@ def format_response_as_json(responses):
         result = []
 
         def process_response(response):
+            # # タプルの場合、最初の要素だけを使用
+            # if isinstance(response, tuple):
+            #     response = response[0]
+
+            # # Noneをスキップ
+            # if response is None:
+            #     return
+
+            # rowsにアクセスしてデータを処理
             for row in response.rows:
                 data = {
                     "dimensions": {dim.name: dim_value.value for dim, dim_value in zip(response.dimension_headers, row.dimension_values)},
@@ -125,7 +146,7 @@ def format_response_as_json(responses):
             process_response(responses)
         
         return json.dumps(result, indent=4, ensure_ascii=False)
-    
+
     except Exception as e:
         logging.error(f'JSON形式への変換中にエラーが発生しました: {e}')
         raise
@@ -150,8 +171,8 @@ def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage], outputDocument
         if not start or not end:
             today = datetime.date.today()
             last_month = today - datetime.timedelta(days=30)
-            START_DATE = str(today) # レポートの開始日(今日)
-            END_DATE = str(last_month) # レポートの終了日(1か月前)]
+            START_DATE = str(last_month) # レポートの開始日(今日)
+            END_DATE = str(today) # レポートの終了日(1か月前)]
             
         if start and end:
             START_DATE = start # レポートの開始日(指定日)
