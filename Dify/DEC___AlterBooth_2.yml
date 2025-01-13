@@ -1,0 +1,851 @@
+app:
+  description: テストブログでチャットフローを作成。
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: advanced-chat
+  name: DEC___AlterBooth_2
+  use_icon_as_answer_icon: true
+kind: app
+version: 0.1.5
+workflow:
+  conversation_variables: []
+  environment_variables:
+  - description: ''
+    id: 31117cbf-6e62-4a92-aa61-703af353cb8d
+    name: COSMOS_DB_KEY
+    selector:
+    - env
+    - COSMOS_DB_KEY
+    value: 74b0fsZoIJ6S0BBBhbn7akWkpJ2G7ssR63fQ7BNC2oxPnguAzTSvwkqCaDzn6OqWRuLc6ZOu8h5rACDboUcVQg==
+    value_type: string
+  - description: ''
+    id: 8feb9a1e-a88b-439d-bb24-4d0a5b20737a
+    name: COSMOS_DB_ENDPOINT
+    selector:
+    - env
+    - COSMOS_DB_ENDPOINT
+    value: https://alterboothdb.documents.azure.com:443/
+    value_type: string
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: answer
+      id: 1734370747112-source-1734459400673-target
+      selected: false
+      source: '1734370747112'
+      sourceHandle: source
+      target: '1734459400673'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: start
+        targetType: question-classifier
+      id: 1734349561429-source-1734461453117-target
+      selected: false
+      source: '1734349561429'
+      sourceHandle: source
+      target: '1734461453117'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: llm
+      id: 1734461453117-1-1734370747112-target
+      selected: false
+      source: '1734461453117'
+      sourceHandle: '1'
+      target: '1734370747112'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: knowledge-retrieval
+        targetType: llm
+      id: 1736087438852-source-1736704333281-target
+      selected: false
+      source: '1736087438852'
+      sourceHandle: source
+      target: '1736704333281'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: llm
+      id: 1736704333281-source-1736704929155-target
+      selected: false
+      source: '1736704333281'
+      sourceHandle: source
+      target: '1736704929155'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: llm
+      id: 1736704929155-source-1736705065342-target
+      selected: false
+      source: '1736704929155'
+      sourceHandle: source
+      target: '1736705065342'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: llm
+      id: 1736705065342-source-1736705274343-target
+      selected: false
+      source: '1736705065342'
+      sourceHandle: source
+      target: '1736705274343'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: answer
+      id: 1736705274343-source-1734407864646-target
+      selected: false
+      source: '1736705274343'
+      sourceHandle: source
+      target: '1734407864646'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: knowledge-retrieval
+      id: 1734461453117-2-1736087438852-target
+      selected: false
+      source: '1734461453117'
+      sourceHandle: '2'
+      target: '1736087438852'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: knowledge-retrieval
+      id: 1734461453117-1736706911916-17367069821170-target
+      source: '1734461453117'
+      sourceHandle: '1736706911916'
+      target: '17367069821170'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: knowledge-retrieval
+        targetType: llm
+      id: 17367069821170-source-1734376100056-target
+      source: '17367069821170'
+      sourceHandle: source
+      target: '1734376100056'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: answer
+      id: 1734376100056-source-1736707069991-target
+      source: '1734376100056'
+      sourceHandle: source
+      target: '1736707069991'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: 開始
+        type: start
+        variables: []
+      height: 53
+      id: '1734349561429'
+      position:
+        x: -695.9982706847896
+        y: 43.90081579531258
+      positionAbsolute:
+        x: -695.9982706847896
+        y: 43.90081579531258
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - sys
+          - query
+        desc: ''
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 50
+        model:
+          completion_params:
+            frequency_penalty: 0.3
+            temperature: 0.7
+          mode: chat
+          name: gemini-1.5-pro
+          provider: google
+        prompt_template:
+        - id: d5df8b3e-89b4-41c0-8192-bf53b4f53bab
+          role: system
+          text: "#role\nあなたは優秀なプロンプト添削者です。ユーザーから入力されたプロンプトを評価してアドバイスをしてください。\n\n#task\n\
+            以下の観点に基づいて、プロンプトを1~5の尺度で評価してください。それぞれの観点について、評価の理由と改善のための提案を詳細に説明してください。\n\
+            \n背景情報：\n質問をするユーザーは自社のブログに埋め込んだgoogle analytics 4のデータを使って、\n- どのような内容のブログが読者を増やしたり減らしたりしているのか、\n\
+            - 読者がどのブログにどれほどの時間滞在しているのか、\n- どのような検索ワードからどの記事に流入しているのか、\n- 顕在ワードは何か、\n\
+            - 顕在ワードの順位推移はどの様な状況か、\n- 注力ワードがうまくクリック数の増加に効果を与えているか（ただし、注力ワードはユーザーが仮説設定したもの)\n\
+            - 読者のサイト閲覧の時間帯や曜日を把握したい\nといった様なブログに関するありとあらゆる情報を分析してブログの読者を増やし、会社の顧客の増加に繋げたいと考えています。\n\
+            \n参考情報：\n\n\n評価の手順：\n1. 評価対象プロンプトを熟読し、背景情報と参考情報を理解する。\n2. 以下の観点ごとに評価を行い、具体的な評価の理由を記録する。\n\
+            3. 各観点の評価結果を踏まえ、改善のための提案を詳細に説明する。\n4. 評価結果と改善提案をまとめ、指定された形式で出力する。\n\n\
+            評価の観点：\n1. 目的の明確さ\n   - プロンプトの目的や意図が明確に伝わるか？\n   - 目的に沿った出力が得られる可能性が高いか？\n\
+            \n2. タスクの具体性\n   - プロンプトで要求されるタスクが具体的に記述されているか？\n   - タスクを遂行するために必要な情報が十分に提供されているか？\n\
+            \n3. 入力情報の適切性\n   - プロンプトで提供される入力情報は、タスクの遂行に適切か？\n   - 入力情報の質と量は十分か？\n\
+            \n4. 出力形式の指定\n   - 期待される出力の形式や構造が明確に指定されているか？\n   - 出力例やテンプレートが提供されているか？\n\
+            \n5. 評価基準の明示\n   - 出力結果の評価基準が明示されているか？\n   - 評価基準は具体的で測定可能か？\n\n6. 創造性の喚起\n\
+            \   - プロンプトは創造的思考を促すような内容か？\n   - 単なる情報の再生ではなく、新しいアイデアの生成を求めているか？\n\n\
+            7. 倫理的配慮\n   - プロンプトの内容は倫理的に問題ないか？\n   - 出力結果が差別的、偏見的、または不適切な内容を含む可能性は低いか？\n\
+            \n8. 言語的明瞭性\n   - プロンプトの文章は明瞭で簡潔か？\n   - 難解な用語や曖昧な表現が避けられているか？\n\n9. 文脈の提供\n\
+            \   - プロンプトは評価対象の背景情報や文脈を十分に提供しているか？\n   - 文脈に基づいて適切な出力が生成される可能性が高いか？\n\
+            \n10. 全体的な完成度\n    - プロンプト全体として、目的の達成に十分な情報と指示が含まれているか？\n    - プロンプトの構成は論理的で一貫しているか？\n\
+            \n出力形式：\n1. 各観点の評価結果（5段階）とその理由\n2. 各観点の改善提案\n3. プロンプト全体の総合評価（5段階）と改善のためのアドバイス\n\
+            4. このプロンプトの評価プロセス自体の改善点\n\n結果の活用方法：\n評価結果をもとにして、より精度の高いプロンプトを完成させ、次のステップで実際にそのプロンプトでAIに質問する。\n\
+            \n上記の評価プロセスを実施し、評価結果と改善提案を提示してください。評価者のスキルや知識レベルに応じて、評価の観点や手順を調整することも可能です。\n\
+            ”””\n\n②改善されたプロンプトを出力するプロンプト\n\n”””\n100点満点を目指してください。\n\nプロンプトを出力する。\n\
+            ”””"
+        - id: d57cf860-a4cb-4ea0-9110-3a4d5ee3dcea
+          role: user
+          text: '{{#context#}}'
+        selected: false
+        title: LLM
+        type: llm
+        variables: []
+        vision:
+          configs:
+            detail: high
+            variable_selector:
+            - sys
+            - files
+          enabled: false
+      height: 97
+      id: '1734370747112'
+      position:
+        x: 166.63724226839656
+        y: -54.58902520093894
+      positionAbsolute:
+        x: 166.63724226839656
+        y: -54.58902520093894
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        memory:
+          query_prompt_template: ''
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 50
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gemini-1.5-pro
+          provider: google
+        prompt_template:
+        - id: 114e219f-9701-4994-91c8-a15e5a21040d
+          role: system
+          text: '# role
+
+            あなたはデータ分析に秀でた優秀なコンサルタントです。ユーザーからの質問に対して与えられたAlterboothのブログデータを分析して明瞭かつ的確なアドバイスをしてください。
+
+
+            # task
+
+            受け取ったプロンプトに対して、知識取得で得られたAlterboothのブログのデータをもとにして以下の手順で最適なアドバイスを加えてください。
+
+
+            # flow
+
+            1. プロンプトで質問されている事柄について把握する
+
+            2. それらの質問に答えるために必要なデータを知識取得から取得する。
+
+            3. 取得する際のデータのカラム名はgoogle analyticsのdimentionsやmetricsを参考にする
+
+            4. 取得したデータをもとに質問に対する的確かつ明瞭なアドバイスを説得力のある形で生成する
+
+
+            # 出力形式
+
+            各質問に対して、図表やグラフなども適宜用いながら説得力がありかつ的確で明瞭なアドバイスを出力する。
+
+
+            #補足
+
+            回答のために足りない情報があれば指摘してください。'
+        - id: 99c3a7a9-70ea-4bde-8678-d9e3fa346011
+          role: assistant
+          text: ''
+        selected: false
+        title: LLM 2
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 97
+      id: '1734376100056'
+      position:
+        x: 579.598329616247
+        y: 423.9575459185235
+      positionAbsolute:
+        x: 579.598329616247
+        y: 423.9575459185235
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: '{{#1736704333281.text#}}{{#1736704929155.text#}}{{#1736705065342.text#}}{{#1736705274343.text#}}/'
+        desc: ''
+        selected: false
+        title: 回答 3
+        type: answer
+        variables: []
+      height: 154
+      id: '1734407864646'
+      position:
+        x: 2142.3534999239987
+        y: 253.6405747381609
+      positionAbsolute:
+        x: 2142.3534999239987
+        y: 253.6405747381609
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: '{{#1734370747112.text#}}
+
+          評価に従ってプロンプトを改善し、再度質問してみてください！'
+        desc: ''
+        selected: false
+        title: 回答 3
+        type: answer
+        variables: []
+      height: 117
+      id: '1734459400673'
+      position:
+        x: 593.7354761085536
+        y: -112.20947508356562
+      positionAbsolute:
+        x: 593.7354761085536
+        y: -112.20947508356562
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        classes:
+        - id: '1'
+          name: 「プロンプトを評価してください」と言われた場合
+        - id: '2'
+          name: ブログ改善案を頼まれた場合
+        - id: '1736706911916'
+          name: その他の場合
+        desc: ''
+        instructions: ''
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gemini-1.5-pro
+          provider: google
+        query_variable_selector:
+        - '1734349561429'
+        - sys.query
+        selected: false
+        title: 質問分類器
+        topics: []
+        type: question-classifier
+        vision:
+          enabled: false
+      height: 227
+      id: '1734461453117'
+      position:
+        x: -227.65076663044715
+        y: -44.112579767734104
+      positionAbsolute:
+        x: -227.65076663044715
+        y: -44.112579767734104
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        dataset_ids:
+        - e0916a64-88c8-4860-a6cb-92d013ab54d3
+        desc: ''
+        multiple_retrieval_config:
+          reranking_enable: false
+          reranking_mode: weighted_score
+          top_k: 4
+          weights:
+            keyword_setting:
+              keyword_weight: 0
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: openai
+              vector_weight: 1
+        query_variable_selector:
+        - sys
+        - query
+        retrieval_mode: multiple
+        selected: false
+        title: 知識取得
+        type: knowledge-retrieval
+      height: 91
+      id: '1736087438852'
+      position:
+        x: 579.598329616247
+        y: 253.6405747381609
+      positionAbsolute:
+        x: 579.598329616247
+        y: 253.6405747381609
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1736087438852'
+          - result
+        desc: ''
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 50
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gemini-1.5-pro
+          provider: google
+        prompt_template:
+        - id: 0f9c0f96-f7f7-486d-9633-e1681de9cf06
+          role: system
+          text: '以下は、GoogleAnalyticsで取得されたディメンションとメトリクスについてのそれぞれの説明です。
+
+
+            <ページ関連情報>
+
+            pageTitle: ユーザーが訪れたページのタイトル（HTML <title> タグから取得）。
+
+            unifiedScreenName: ウェブやアプリでの統一されたスクリーン名（画面やページの名称）。
+
+            unifiedScreenClass: 統一されたスクリーンクラス。特定のページや画面の分類。
+
+            pageLocation: 現在のページの完全なURL（クエリパラメータを含む）。
+
+            unifiedPageScreen: ページまたは画面の統一ビュー（ページとスクリーン情報の組み合わせ）。
+
+            contentGroup: ページまたはコンテンツのグループ。カスタム設定で特定のコンテンツを分類。
+
+            contentType: コンテンツの種類（例: テキスト、画像、動画など）。
+
+
+            <リンクとユーザーの行動>
+
+            linkText: ユーザーがクリックしたリンクのテキスト。
+
+            linkClasses: クリックされたリンクに関連するHTMLのクラス属性。
+
+            linkUrl: ユーザーがクリックしたリンクのURL。
+
+            percentScrolled: ページでスクロールされた割合（例: 50%、75%、100%）。
+
+            outbound: 外部リンク（ドメイン外のリンク）がクリックされたかどうか（true または false）。
+
+
+            <トラフィックソース関連>
+
+            source: トラフィックの発生源（例: google、facebook）。
+
+            sourceMedium: トラフィックの発生源とメディアの組み合わせ（例: google / organic）。
+
+            sourcePlatform: トラフィック元のプラットフォーム（例: YouTube、Instagram）。
+
+            sessionSourceMedium: セッション全体のトラフィック発生源とメディアの組み合わせ。
+
+            sessionSourcePlatform: セッション全体のトラフィック元プラットフォーム。
+
+
+            <ユーザー関連情報>
+
+            newVsReturning: ユーザーが新規かリピーターかを示す（new または returning）。
+
+            firstSessionDate: ユーザーが最初に訪問した日付。
+
+            signedInWithUserId: サインインしたユーザーID（アプリやウェブでサインインしている場合に取得可能）。
+
+
+            <デバイスおよび言語>
+
+            deviceCategory: 使用されたデバイスのカテゴリ（例: desktop、mobile、tablet）。
+
+            language: ユーザーのブラウザやデバイスの言語設定（例: en-US、ja-JP）。
+
+
+            <時間関連情報>
+
+            dateHourMinute: イベントが発生した日付と時刻（例: 2025-01-13 15:45）。
+
+            dayOfWeekName: 曜日（例: Monday、Tuesday）。
+
+            hour: イベントが発生した時間（例: 午後3時なら「15」）。
+
+
+            <ページ遷移と検索>
+
+            pageReferrer: 現在のページに来る前に参照したページのURL（リファラー）。
+
+            landingPage: セッションの最初に訪問したページのURL。
+
+            searchTerm: ユーザーがウェブサイト内で入力した検索クエリ。
+
+
+            <地理的な位置>
+
+            country: ユーザーの推定国（例: Japan、United States）。
+
+            region: ユーザーの推定地域や都道府県（例: Tokyo、California）。
+
+            city: ユーザーの推定都市（例: New York、Osaka）。
+
+
+
+            得られたデータはAlterboothのブログのデータである。このデータからどのようなデータがみうけられるか、徹底的にすべて上げて。'
+        - id: 1ed6d6cf-d293-4c0b-bbec-f1a749ab3ce8
+          role: user
+          text: '{{#sys.query#}}'
+        selected: false
+        title: LLM 3
+        type: llm
+        variables: []
+        vision:
+          configs:
+            detail: high
+            variable_selector:
+            - sys
+            - files
+          enabled: true
+      height: 97
+      id: '1736704333281'
+      position:
+        x: 883.598329616247
+        y: 253.6405747381609
+      positionAbsolute:
+        x: 883.598329616247
+        y: 253.6405747381609
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1736704333281'
+          - text
+        desc: ''
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 50
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: o1-mini
+          provider: openai
+        prompt_template:
+        - id: 27fc9e59-00eb-4896-822e-40ef3cc622e9
+          role: system
+          text: ''
+        - id: 17732e05-2fd5-4177-8c45-a95b2a5a9b00
+          role: user
+          text: 'それらのデータの中で、ブログに利用者を増やすために使えそうな情報が欲しい。
+
+            まずブログの利用者、そこからの顧客への転移につながると考えられる要素を考えて。
+
+            次にその要素に当てはまる内容がデータの中にあるか探して、それらのデータのみに絞って教えて。'
+        selected: false
+        title: LLM 4
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 97
+      id: '1736704929155'
+      position:
+        x: 1192.2337180738516
+        y: 253.6405747381609
+      positionAbsolute:
+        x: 1192.2337180738516
+        y: 253.6405747381609
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1736704929155'
+          - text
+        desc: ''
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 50
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: o1-mini
+          provider: openai
+        prompt_template:
+        - id: 87246ae5-68e2-493a-9826-f8c8f9168830
+          role: system
+          text: "株式会社オルターブース（Alterbooth）は、福岡県福岡市に本社を構える企業で、2015年3月19日に設立されました。 \n\n\
+            <業務内容>\nオルターブースは、主に以下の事業を展開しています。\nクラウドコンピューティングを活用したシステム企画・開発および運営: Microsoft\
+            \ Azureを中心に、クラウドの導入支援、フルスタック開発、フルマネージドサービスを提供しています。 \nインターネット関連システムの企画・開発および運用:\
+            \ 最新の技術を取り入れたインターネットシステムの開発と運用を行っています。\nSaaS、ASPサービスおよびIT商品の企画・開発および運営:\
+            \ 自社サービスとして、クラウドインテグレーションサービス「Cloud Pointer」や、マイクロサービスアーキテクチャー支援「KOSMISCH」などを展開しています。\
+            \ \n\n<強み>\nオルターブースの主な強みは以下のとおりです。\n高度な技術力: 日本IT業界の最先端を行く技術力の高いエンジニアが在籍しており、MicrosoftのRegional\
+            \ DirectorやMVP、Top Engineer Award受賞者が所属しています。 \nWANTEDLY（ウォンテッドリー）「はたらく」を面白くするビジネスSNS\n\
+            安定した収益構造: クラウド事業における安定的な収益構造を持ち、創業以来連続して黒字経営を維持しています。\nMicrosoftとの強力なパートナーシップ:\
+            \ マイクロソフトの数少ないTier1パートナーとして認定されており、Microsoft Japan Partner of The Yearを通算5回受賞するなど、強固な連携を築いています。\
+            \ \nWANTEDLY（ウォンテッドリー）「はたらく」を面白くするビジネスSNS\n\nこれらの強みを活かし、オルターブースはクラウド技術を駆使して企業の文化と変革を推進するパートナーとして、顧客のイノベーション促進に貢献しています。 "
+        - id: 62b9bda4-9a3b-49d4-a0be-28244d69b377
+          role: user
+          text: 絞ったデータから、Alterboothの概要からこの企業ならこのブログでどのような特徴や対策ができそうか
+        selected: false
+        title: LLM 5
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 97
+      id: '1736705065342'
+      position:
+        x: 1496.2337180738516
+        y: 253.6405747381609
+      positionAbsolute:
+        x: 1496.2337180738516
+        y: 253.6405747381609
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1736705065342'
+          - text
+        desc: ''
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 50
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: o1-mini
+          provider: openai
+        prompt_template:
+        - id: 8cccc31a-89cb-4295-87ef-e915a38372f1
+          role: system
+          text: ''
+        - id: 988171e2-597a-4c58-be19-159dd9d5eecc
+          role: user
+          text: この特徴の元、さきほどの利用者を増やす方法はどのように活かせそうか
+        selected: false
+        title: LLM 6
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 97
+      id: '1736705274343'
+      position:
+        x: 1800.2337180738516
+        y: 253.6405747381609
+      positionAbsolute:
+        x: 1800.2337180738516
+        y: 253.6405747381609
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        dataset_ids:
+        - e0916a64-88c8-4860-a6cb-92d013ab54d3
+        desc: ''
+        multiple_retrieval_config:
+          reranking_enable: false
+          reranking_mode: weighted_score
+          top_k: 4
+          weights:
+            keyword_setting:
+              keyword_weight: 0
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: openai
+              vector_weight: 1
+        query_variable_selector:
+        - sys
+        - query
+        retrieval_mode: multiple
+        selected: false
+        title: 知識取得 (1)
+        type: knowledge-retrieval
+      height: 91
+      id: '17367069821170'
+      position:
+        x: 127.19199973021057
+        y: 423.9575459185235
+      positionAbsolute:
+        x: 127.19199973021057
+        y: 423.9575459185235
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: '{{#1734376100056.text#}}'
+        desc: ''
+        selected: false
+        title: 回答 3
+        type: answer
+        variables: []
+      height: 101
+      id: '1736707069991'
+      position:
+        x: 883.598329616247
+        y: 423.9575459185235
+      positionAbsolute:
+        x: 883.598329616247
+        y: 423.9575459185235
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: 252.87341238258648
+      y: 269.11398337030596
+      zoom: 0.30898433194221847

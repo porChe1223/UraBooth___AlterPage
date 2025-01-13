@@ -6,34 +6,40 @@ import os
 
 COSMOS_DB_ENDPOINT = os.getenv("COSMOS_DB_ENDPOINT")
 COSMOS_DB_KEY = os.getenv("COSMOS_DB_KEY")
-ITEM_ID = '2022-12-28 to 2025-1-1'
+COSMOS_DB_NAME = "my-database"
+CONTAINER_NAME = "my-container"
 
 app = func.FunctionApp()
 
-@app.function_name(name="GetDBInfo")
+@app.function_name(name="CosmosDBDataGetter")
 @app.route(route="data", auth_level=func.AuthLevel.ANONYMOUS)
 def GetDBInfo(req: func.HttpRequest) -> func.HttpResponse:
+    # 日付範囲をリクエストパラメータから取得
+    data_range = req.params.get('data_range')
 
     # Cosmos DB から情報を取得
     try:
+        # DB情報
         client = CosmosClient(COSMOS_DB_ENDPOINT, COSMOS_DB_KEY)
-        database_name = "my-database"
-        database = client.get_database_client(database_name)
-
-        # データベース内の全コンテナのリストを取得
-        containers_list = database.list_containers()
-        containers_names = [container['id'] for container in containers_list]
-
+        database = client.get_database_client(COSMOS_DB_NAME)
+        container = database.get_container_client(CONTAINER_NAME)
+        # 出力用変数
         all_data = {}
 
-        # 各コンテナから指定したアイテムを取得
-        for container_name in containers_names:
-            container = database.get_container_client(container_name)
+        if not data_range:
+            # コンテナから全てのアイテムを取得
+            items = list(container.read_all_items())
+            for item in items:
+                all_data[CONTAINER_NAME] = items
+
+        if data_range:
+            # コンテナから指定したアイテムを取得
+            ITEM_ID = data_range
             try:
                 item = container.read_item(item=ITEM_ID, partition_key=ITEM_ID)
-                all_data[container_name] = item
+                all_data[CONTAINER_NAME] = item
             except exceptions.CosmosResourceNotFoundError:
-                all_data[container_name] = None
+                all_data[CONTAINER_NAME] = 'Item Not Found'
         
         response_body = json.dumps(all_data, ensure_ascii=False).replace('\\n', '\n').encode('utf-8')
 
