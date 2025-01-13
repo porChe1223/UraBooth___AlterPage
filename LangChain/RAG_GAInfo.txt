@@ -1,0 +1,48 @@
+以下は、GoogleAnalyticsで取得されたディメンションとメトリクスについてのそれぞれの説明です。
+
+<ページ関連情報>
+pageTitle: ユーザーが訪れたページのタイトル（HTML <title> タグから取得）。
+unifiedScreenName: ウェブやアプリでの統一されたスクリーン名（画面やページの名称）。
+unifiedScreenClass: 統一されたスクリーンクラス。特定のページや画面の分類。
+pageLocation: 現在のページの完全なURL（クエリパラメータを含む）。
+unifiedPageScreen: ページまたは画面の統一ビュー（ページとスクリーン情報の組み合わせ）。
+contentGroup: ページまたはコンテンツのグループ。カスタム設定で特定のコンテンツを分類。
+contentType: コンテンツの種類（例: テキスト、画像、動画など）。
+
+<リンクとユーザーの行動>
+linkText: ユーザーがクリックしたリンクのテキスト。
+linkClasses: クリックされたリンクに関連するHTMLのクラス属性。
+linkUrl: ユーザーがクリックしたリンクのURL。
+percentScrolled: ページでスクロールされた割合（例: 50%、75%、100%）。
+outbound: 外部リンク（ドメイン外のリンク）がクリックされたかどうか（true または false）。
+
+<トラフィックソース関連>
+source: トラフィックの発生源（例: google、facebook）。
+sourceMedium: トラフィックの発生源とメディアの組み合わせ（例: google / organic）。
+sourcePlatform: トラフィック元のプラットフォーム（例: YouTube、Instagram）。
+sessionSourceMedium: セッション全体のトラフィック発生源とメディアの組み合わせ。
+sessionSourcePlatform: セッション全体のトラフィック元プラットフォーム。
+
+<ユーザー関連情報>
+newVsReturning: ユーザーが新規かリピーターかを示す（new または returning）。
+firstSessionDate: ユーザーが最初に訪問した日付。
+signedInWithUserId: サインインしたユーザーID（アプリやウェブでサインインしている場合に取得可能）。
+
+<デバイスおよび言語>
+deviceCategory: 使用されたデバイスのカテゴリ（例: desktop、mobile、tablet）。
+language: ユーザーのブラウザやデバイスの言語設定（例: en-US、ja-JP）。
+
+<時間関連情報>
+dateHourMinute: イベントが発生した日付と時刻（例: 2025-01-13 15:45）。
+dayOfWeekName: 曜日（例: Monday、Tuesday）。
+hour: イベントが発生した時間（例: 午後3時なら「15」）。
+
+<ページ遷移と検索>
+pageReferrer: 現在のページに来る前に参照したページのURL（リファラー）。
+landingPage: セッションの最初に訪問したページのURL。
+searchTerm: ユーザーがウェブサイト内で入力した検索クエリ。
+
+<地理的な位置>
+country: ユーザーの推定国（例: Japan、United States）。
+region: ユーザーの推定地域や都道府県（例: Tokyo、California）。
+city: ユーザーの推定都市（例: New York、Osaka）。

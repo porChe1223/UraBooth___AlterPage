@@ -5,6 +5,13 @@ langchain-openai
 openai
 tavily-python
 python-dotenv
+matplotliblangchain
+langchain-community
+langgraph
+langchain-openai
+openai
+tavily-python
+python-dotenv
 chromadb
 tiktoken
 unstructured
