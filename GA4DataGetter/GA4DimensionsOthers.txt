@@ -38,6 +38,7 @@ cohortNthDay
 cohortNthMonth
 cohortNthWeek
 contentId
+contentType
 continent
 continentId
 countryId
@@ -166,6 +167,7 @@ googleAdsKeyword
 googleAdsQuery
 groupId
 hostName
+hour
 isKeyEvent
 isoWeek
 isoYear
@@ -191,6 +193,7 @@ itemVariant
 landingPagePlusQueryString
 languageCode
 level
+linkClasses
 linkDomain
 linkId
 manualAdContent
@@ -220,6 +223,7 @@ operatingSystem
 operatingSystemVersion
 operatingSystemWithVersion
 orderCoupon
+outbound
 pagePath
 pagePathPlusQueryString
 platform
@@ -322,13 +326,19 @@ sessionSa360Query
 sessionSa360Source
 sessionSa360SourceMedium
 sessionSource
+sessionSourcePlatform
 shippingTier
+source
+sourcePlatform
 streamId
 streamName
 testDataFilterId
 testDataFilterName
 transactionId
 unifiedPagePathScreen
+unifiedPageScreen
+unifiedScreenClass
+unifiedScreenName
 userAgeBracket
 userGender
 videoProvider

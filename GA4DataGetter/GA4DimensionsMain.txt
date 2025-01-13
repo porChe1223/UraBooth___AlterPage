@@ -1,31 +1,6 @@
-pageTitle
-unifiedScreenName
-unifiedScreenClass
-pageLocation
-unifiedPageScreen
-contentGroup
-contentType
-linkText
-linkClasses
-linkUrl
-source
-sourceMedium
-sourcePlatform
-sessionSourceMedium
-sessionSourcePlatform
-newVsReturning
-firstSessionDate
-signedInWithUserId
-deviceCategory
-language
-dateHourMinute
-dayOfWeekName
-hour
-pageReferrer
-landingPage
-percentScrolled
-outbound
-searchTerm
-country
-region
-city
+['pageTitle', 'pageLocation', 'percentScrolled', 'linkText', 'linkUrl', 'contentGroup']
+['sourceMedium', 'sessionSourceMedium', 'landingPage', 'dateHourMinute']
+['newVsReturning', 'signedInWithUserId', 'firstSessionDate', 'landingPage', 'pageReferrer', 'percentScrolled']
+['searchTerm', 'pageLocation', 'percentScrolled', 'newVsReturning', 'dateHourMinute']
+['deviceCategory', 'language', 'country', 'region', 'city']
+['dateHourMinute', 'dayOfWeekName', 'pageTitle', 'newVsReturning', 'sourceMedium']
