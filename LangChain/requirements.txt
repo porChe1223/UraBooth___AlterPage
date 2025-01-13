@@ -5,4 +5,15 @@ langchain-openai
 openai
 tavily-python
 python-dotenv
-matplotlib
+matplotliblangchain
+langchain-community
+langgraph
+langchain-openai
+openai
+tavily-python
+python-dotenv
+chromadb
+tiktoken
+unstructured
+selenium
+sentence-transeformers
