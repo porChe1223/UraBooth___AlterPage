@@ -5,3 +5,6 @@ langchain-openai
 openai
 tavily-python
 python-dotenv
+chromadb
+tiktoken
+unstructured
