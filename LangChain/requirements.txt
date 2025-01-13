@@ -8,3 +8,6 @@ python-dotenv
 chromadb
 tiktoken
 unstructured
+selenium
+sentence-transeformers
+azure-cosmos

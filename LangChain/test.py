@@ -1,109 +1,79 @@
-import requests
-from langchain.agents import initialize_agent, Tool
-from langchain.chat_models import ChatOpenAI
-from langchain.tools import tool
-from langchain_community.embeddings import OpenAIEmbeddings
-from langchain_chroma import Chroma
-from langchain.indexes import VectorstoreIndexCreator
-from langchain.text_splitter import CharacterTextSplitter
+from azure.cosmos import CosmosClient
+from langchain.embeddings.openai import OpenAIEmbeddings
+import openai
 import os
+import json
 
-# OpenAI APIキーの取得
-vitamin = os.getenv("OPENAI_API_KEY")
+# APIキーとエンドポイントの取得
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+COSMOS_DB_ENDPOINT = os.getenv("COSMOS_DB_ENDPOINT")
+COSMOS_DB_KEY = os.getenv("COSMOS_DB_KEY")
+DATABASE_NAME = "cosmosdbdatagetter"
+CONTAINER_NAME = "my-container"
 
-# RequestsWrapperを用いてHTTPリクエストを行うカスタムツールの定義
-@tool("fetch_http_data", return_direct=True)
-def fetch_http_data(url: str, method: str = "GET", headers: dict = None, params: dict = None) -> dict:
-    """
-    Fetch data from the given URL using HTTP request with the specified method and parameters.
-    """
-    if headers is None:
-        headers = {}
-    if params is None:
-        params = {}
+# OpenAI APIキーの設定
+openai.api_key = OPENAI_API_KEY
 
-    try:
-        if method.lower() == "get":
-            response = requests.get(url, headers=headers, params=params)
-        else:
-            raise ValueError(f"Unsupported method: {method}")
+# Cosmos DBクライアントの初期化
+client = CosmosClient(COSMOS_DB_ENDPOINT, COSMOS_DB_KEY)
+database = client.get_database_client(DATABASE_NAME)
+container = database.get_container_client(CONTAINER_NAME)
 
-        if response.status_code == 200:
-            return response.json()  # JSON形式で返却
-        else:
-            raise ValueError(f"Failed to fetch data from {url}. Status code: {response.status_code}")
-    
-    except Exception as e:
-        return {"error": str(e)}
+# OpenAI埋め込みモデルの初期化
+embeddings_model = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
-# OpenAI Chat LLMの設定
-llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.5, openai_api_key=vitamin)
-
-# Toolの設定
-tools = [
-    Tool(
-        name="Fetch HTTP Data",
-        func=fetch_http_data,
-        description="Use this tool to fetch data from a URL via HTTP request."
+# データをベクトル化してCosmos DBに保存する関数
+def vectorize_and_store_data():
+    items = container.query_items(
+        query="SELECT c.id, c.text FROM c",
+        enable_cross_partition_query=True
     )
-]
 
-# エージェントの初期化
-agent = initialize_agent(
-    tools=tools,
-    llm=llm,
-    agent_type="zero-shot-react-description",
-    verbose=True
-)
+    for item in items:
+        text = item["text"]
+        embedding = embeddings_model.embed_query(text)
 
-# リクエストURLと設定
-url = "https://cosmosdbdatagetter.azurewebsites.net/data"
-headers = {}  # 必要な場合ヘッダーを追加
-params = {}  # 必要な場合クエリパラメータを追加
+        # 埋め込みベクトルを保存
+        container.upsert_item({
+            "id": item["id"],
+            "text": text,
+            "embedding": embedding
+        })
 
-# エージェントによる実行
-response = agent.run(input=f"Fetch the data from {url} using GET method and process the result.")
-print(response)
+# ベクトル検索を実行する関数
+def vector_search(query, top_k=5):
+    # クエリのベクトル化
+    query_vector = embeddings_model.embed_query(query)
 
-def custom_loader(url):  # 引数は単一のURL
-    documents = []
-    response = requests.get(url)
-    if response.status_code == 200:
-        try:
-            data = response.json()
-            if "my-container" in data:
-                documents.extend([item["data"] for item in data["my-container"] if "data" in item])
-            else:
-                print(f"Expected 'my-container' in the data, but not found: {data}")
-        except requests.exceptions.JSONDecodeError as e:
-            print(f"Error decoding JSON from {url}: {e}")
-            print(f"Response content: {response.text}")
-    else:
-        print(f"Failed to fetch data from {url}, status code: {response.status_code}")
-    return documents  # documentsを返す
+    # ベクトル検索クエリ
+    query_text = (
+        "SELECT TOP @top_k c.id, c.text, VECTOR_DISTANCE(c.embedding, @query_vector) AS score "
+        "FROM c "
+        "ORDER BY score ASC"
+    )
 
-documents = custom_loader(url)  # 単一のURLを渡す
+    parameters = [
+        {"name": "@top_k", "value": top_k},
+        {"name": "@query_vector", "value": query_vector}
+    ]
 
-if not documents:
-    raise ValueError("No documents loaded from the provided URL")
+    results = container.query_items(query=query_text, parameters=parameters, enable_cross_partition_query=True)
 
-embeddings = OpenAIEmbeddings(api_key=vitamin)
-vectorstore = Chroma.from_documents(documents, embedding=embeddings)
+    return list(results)
 
-text_splitter = CharacterTextSplitter(
-    separator="\n",
-    chunk_size=300,
-    chunk_overlap=0,
-    length_function=len,
-)
+if __name__ == "__main__":
+    # データのベクトル化と保存
+    print("Vectorizing and storing data...")
+    vectorize_and_store_data()
 
-index = VectorstoreIndexCreator(
-    vectorstore_cls=Chroma,
-    embedding=OpenAIEmbeddings(api_key=vitamin),
-    text_splitter=text_splitter,
-).from_documents(documents)
+    # クエリ入力
+    query_input = "ブログの情報を取得してください"
 
-# 質問の処理
-# query = "記事のタイトルは？"
-# answer = index.query(query)
-# print(f"Answer: {answer}")
+    # ベクトル検索の実行
+    print("Performing vector search...")
+    search_results = vector_search(query_input)
+
+    # 検索結果の表示
+    print("Search results:")
+    for result in search_results:
+        print(json.dumps(result, indent=2, ensure_ascii=False))

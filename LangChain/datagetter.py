@@ -1,60 +1,59 @@
-import requests
-from langchain_community.vectorstores import Chroma
-from langchain_openai import OpenAIEmbeddings
-from langchain.indexes import VectorstoreIndexCreator
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+from langchain.chains import SequentialChain
+from langchain.prompts.chat import (
+    SystemMessagePromptTemplate,
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate
+)
+from azure.cosmos import CosmosClient
 import os
-
 vitamin = os.getenv("OPENAI_API_KEY")
+credential = os.getenv("COSMOS_DB_KEY")
 
-url = "https://cosmosdbdatagetter.azurewebsites.net/data"
-
-def custom_loader(url):  # 引数は単一のURL
-    documents = []
-    response = requests.get(url)
-    if response.status_code == 200:
-        try:
-            data = response.json()
-            if "my-container" in data:
-                documents.extend([item["data"] for item in data["my-container"] if "data" in item])
-            else:
-                print(f"Expected 'my-container' in the data, but not found: {data}")
-        except requests.exceptions.JSONDecodeError as e:
-            print(f"Error decoding JSON from {url}: {e}")
-            print(f"Response content: {response.text}")
-    else:
-        print(f"Failed to fetch data from {url}, status code: {response.status_code}")
-    return documents  # documentsを返す
-
-documents = custom_loader(url)  # 単一のURLを渡す
-
-if not documents:
-    raise ValueError("No documents loaded from the provided URL")
-
-embeddings = OpenAIEmbeddings(api_key=vitamin)
-vectorstore = Chroma(embedding=embeddings).from_documents(documents)
-
-# `documents`の表示を制限して数が多い場合も問題なく処理されるように
-# print(f"Loaded {len(documents)} documents")  # 必要に応じてデバッグ用に表示
+llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.5, openai_api_key=vitamin)
 
 
-# データを一部表示して確認
-# print(f"Loaded {len(documents)} documents")
+import langchain_community.document_loaders
+import langchain.embeddings
+import langchain.vectorstores
+import json
 
-text_splitter = CharacterTextSplitter(
-    separator="\n",
-    chunk_size=300,
-    chunk_overlap=0,
-    length_function=len,
+
+documents_url = ["https://cosmosdbdatagetter.azurewebsites.net/data",]
+
+
+loader = langchain_community.document_loaders.SeleniumURLLoader(urls=documents_url)  # 修正
+documents = loader.load()
+#print(f"出力ううううううううううう:{documents[:5]}") 
+print(type(documents))  # 20文字に制限
+
+client = CosmosClient(documents_url, credential)
+my_container = client.get_container_client("my-container").get_container_client("documents")
+
+embedding = langchain.embeddings.HuggingFaceEmbeddings(
+    model_name="intfloat/multilingual-e5-base"
 )
 
-index = VectorstoreIndexCreator(
-    vectorstore_cls=Chroma,
-    embedding=OpenAIEmbeddings(api_key=vitamin),
-    text_splitter=text_splitter,
-).from_documents(documents)
+def get_embedding(text, model):
+   text = text.replace("\n", " ")
+   res = openai.embeddings.create(input = [text], model=model).data[0].embedding
+   return res
 
-# 質問の処理
-#query = "記事のタイトルは？"
-#answer = index.query(query)
-#print(f"Answer: {answer}")
+message = "ブログの情報を取得してください"
+query_vector = get_embedding(message, model="text-embedding-ada-002")
+
+for item in my_container.query_items(
+   query="SELECT TOP 5 c.title, c.review, VectorDistance(c.contentVector,@embedding) AS SimilarityScore FROM c ORDER BY VectorDistance(c.contentVector,@embedding)",
+   parameters=[
+      {"name": "@embedding", "value": query_vector}
+   ],
+   enable_cross_partition_query=True):
+   print(json.dumps(item, indent=True, ensure_ascii=False))
+
+
+#vectorstore = langchain.vectorstores.Chroma.from_documents(
+    #documents=documents,
+    #embedding=embedding
+#)
