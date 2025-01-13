@@ -1,59 +1,62 @@
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-from langchain.chains import SequentialChain
-from langchain.prompts.chat import (
-    SystemMessagePromptTemplate,
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate
-)
-from azure.cosmos import CosmosClient
-import os
-vitamin = os.getenv("OPENAI_API_KEY")
-credential = os.getenv("COSMOS_DB_KEY")
-
-llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.5, openai_api_key=vitamin)
+def data_get():
+    documents_url = ["https://cosmosdbdatagetter.azurewebsites.net/data?data_range=2024-9-28 to 2025-1-1",]
 
 
-import langchain_community.document_loaders
-import langchain.embeddings
-import langchain.vectorstores
-import json
+    loader = langchain_community.document_loaders.SeleniumURLLoader(urls=documents_url)  # 修正
+    documents = loader.load() 
+
+    # 読込した内容を分割する
+    text_splitter = langchain.text_splitter.RecursiveCharacterTextSplitter(
+        chunk_size=100,
+        chunk_overlap=10,
+    )
+    docs = text_splitter.split_documents(documents)
+
+    # OpenAIEmbeddings の初期化
+    embedding = OpenAIEmbeddings()
+
+    def get_embedding(text, model):
+        text = text.replace("\n", " ")
+        res = openai.embeddings.create(input = [text], model=model).data[0].embedding
+        return res
+    
+    vectorstore = Chroma.from_documents(
+        documents=docs,
+        embedding=embedding
+    )
 
 
-documents_url = ["https://cosmosdbdatagetter.azurewebsites.net/data",]
+    """
+    ###############
+    # LLMに質問する #
+    ###############
 
+    # プロンプトを準備
+    template = """
+    #<bos><start_of_turn>system
+    #次の文脈を使用して、最後の質問に答えてください。
+    #{context}
+    #<end_of_turn><start_of_turn>user
+    #{query}
+    #<end_of_turn><start_of_turn>model
+    """
+    prompt = langchain.prompts.PromptTemplate.from_template(template)
 
-loader = langchain_community.document_loaders.SeleniumURLLoader(urls=documents_url)  # 修正
-documents = loader.load()
-#print(f"出力ううううううううううう:{documents[:5]}") 
-print(type(documents))  # 20文字に制限
+    # チェーンを準備
+    chain = (
+        prompt
+        | llm
+    )
 
-client = CosmosClient(documents_url, credential)
-my_container = client.get_container_client("my-container").get_container_client("documents")
+    query = "記事の{activeUsers}を教えてください"
 
-embedding = langchain.embeddings.HuggingFaceEmbeddings(
-    model_name="intfloat/multilingual-e5-base"
-)
+    # 検索する
+    search = vectorstore.similarity_search(query=query, k=3)
 
-def get_embedding(text, model):
-   text = text.replace("\n", " ")
-   res = openai.embeddings.create(input = [text], model=model).data[0].embedding
-   return res
+    content = "\n".join([f"Content:\n{doc.page_content}" for doc in search])
 
-message = "ブログの情報を取得してください"
-query_vector = get_embedding(message, model="text-embedding-ada-002")
+    # 推論を実行
+    answer = chain.invoke({'query': query, 'context': content})
+    print(answer)
+    """
 
-for item in my_container.query_items(
-   query="SELECT TOP 5 c.title, c.review, VectorDistance(c.contentVector,@embedding) AS SimilarityScore FROM c ORDER BY VectorDistance(c.contentVector,@embedding)",
-   parameters=[
-      {"name": "@embedding", "value": query_vector}
-   ],
-   enable_cross_partition_query=True):
-   print(json.dumps(item, indent=True, ensure_ascii=False))
-
-
-#vectorstore = langchain.vectorstores.Chroma.from_documents(
-    #documents=documents,
-    #embedding=embedding
-#)

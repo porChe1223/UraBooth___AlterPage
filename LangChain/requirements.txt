@@ -10,4 +10,3 @@ tiktoken
 unstructured
 selenium
 sentence-transeformers
-azure-cosmos

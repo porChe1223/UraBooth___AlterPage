@@ -8,6 +8,7 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate
 )
 import os
+
 vitamin = os.getenv("OPENAI_API_KEY")
 
 llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.5, openai_api_key=vitamin)
@@ -22,11 +23,11 @@ def txt_read(txtfile):
 global_system_prompt = SystemMessagePromptTemplate(
     prompt=PromptTemplate(
  # システムプロンプトに変数がない場合、空リストを指定
-        template=txt_read("globalprompt.txt")  # 読み込んだテキストをテンプレートとして設定
+        template=txt_read("RAG_globalprompt.txt")  # 読み込んだテキストをテンプレートとして設定
     )
 )
 
-evaluation_system_prompt = txt_read("evaluationprompt.txt")
+evaluation_system_prompt = txt_read("RAG_evaluationprompt.txt")
 
 # プロンプト評価のためのテンプレート
 evaluation_prompt = PromptTemplate(
@@ -106,7 +107,7 @@ def process_input(user_input: str):
 
 if __name__ == "__main__":
     #user_input = "ブログの流入元について教えてください。(ここに質問を入力することになっています。)プロンプトを評価してください。"
-    user_input = "私のブログは旅行に関するもので、ターゲットオーディエンスは20代から30代の若者です。ブログの流入元として、SEO、SNS、リファラルの効果を比較したいです。各流入元の特徴をリスト形式で説明し、具体的なデータや事例を含めてください。また、流入元を改善するための新しいアイデアも提案してください。プロンプトを評価してください。"
+    user_input = "私のブログは旅行に関するもので、ターゲットオーディエンスは20代から30代の若者です。ブログの流入元として、SEO、SNS、リファラルの効果を比較したいです。各流入元の特徴をリスト形式で説明し、具体的なデータや事例を含めてください。また、流入元を改善するための新しいアイデアも提案してください。プロンプトを評価してください"
     output = process_input(user_input)
     print(output)
     print("評価に従ってプロンプトを改善し、再度質問してみてください!")
