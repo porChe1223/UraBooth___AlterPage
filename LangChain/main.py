@@ -63,20 +63,20 @@ def exec_chain(chain, prompt, retries=3, delay=30):
 ############
 # 実行関数 #
 ############
-def exec_func_A(chain, prompt, retries=3, delay=30):
+def exec_Normal(chain, prompt, retries=3, delay=30):
+    for attempt in range(retries):
+        # モックデータを返す
+        return {"content": f"NNN: {prompt}"}
+
+def exec_Review(chain, prompt, retries=3, delay=30):
+    for attempt in range(retries):
+        # モックデータを返す
+        return {"content": f"RRR: {prompt}"}
+
+def exec_Analyze(chain, prompt, retries=3, delay=30):
     for attempt in range(retries):
         # モックデータを返す
         return {"content": f"AAA: {prompt}"}
-    
-def exec_func_B(chain, prompt, retries=3, delay=30):
-    for attempt in range(retries):
-        # モックデータを返す
-        return {"content": f"BBB: {prompt}"}
-
-def exec_func_C(chain, prompt, retries=3, delay=30):
-    for attempt in range(retries):
-        # モックデータを返す
-        return {"content": f"CCC: {prompt}"}
 
 
 
@@ -84,73 +84,71 @@ def exec_func_C(chain, prompt, retries=3, delay=30):
 # Nodeの宣言 #
 ##############
 # 開始ノード
-def start_node(state: State, config: RunnableConfig):
+def node_Start(state: State, config: RunnableConfig):
     prompt = state["value"]                   # LLMに渡すプロンプト
     # response = retry_requestA(None, prompt) # LLMの呼び出し
     # return {"value": response['content']}   # 応答を新しいStateに格納
     return {"value": f"開始: {prompt}"}
 
-# ブログの改善ノード
-def node_A1(state: State, config: RunnableConfig):
+# 標準回答(アプリの説明付き)ノード
+def node_Normal(state: State, config: RunnableConfig):
     prompt = state["value"]
-    response = exec_func_A(None, prompt)
+    response = exec_Normal(None, prompt)
     return {"value": response['content']}
-
-def node_A2(state: State, config: RunnableConfig):
-    prompt = state["value"]
-    response = exec_func_A(None, prompt)
-    return {"value": response['content']}
-
-def node_A3(state: State, config: RunnableConfig):
-    prompt = state["value"]
-    response = exec_func_A(None, prompt)
-    return {"value": response['content']}
-
-def node_A4(state: State, config: RunnableConfig):
-    prompt = state["value"]
-    response = exec_func_A(None, prompt)
-    return {"value": response['content']}
-
-def node_A5(state: State, config: RunnableConfig):
-    prompt = state["value"]
-    response = exec_func_A(None, prompt)
-
-    data = [1, 2, 3, 4, 5]
-    plt.plot(data)
-    plt.title('Sample Graph')
-    plt.xlabel('X-axis')                  # グラフ描画の処理
-    plt.ylabel('Y-axis')
-    plt.savefig('graph.png') # グラフの処理方法が悩みどころ
-
-    return {"value": response['content']}
-
-def node_A6(state: State, config: RunnableConfig):
-    prompt = state["value"]
-    response = exec_func_A(None, prompt)
-    return {"value": response['content']}
-
 
 # プロンプトの評価ノード
-def node_B1(state: State, config: RunnableConfig):
+def node_Review(state: State, config: RunnableConfig):
     prompt = state["value"]
-    response = exec_func_B(None, prompt)
+    response = exec_Review(None, prompt)
     return {"value": response['content']}
 
-
-# その他ノード
-def node_C1(state: State, config: RunnableConfig):
+# ブログの改善ノード
+def node_Analyze(state: State, config: RunnableConfig):
     prompt = state["value"]
-    response = exec_func_C(None, prompt)
+    response = exec_Analyze(None, prompt)
     return {"value": response['content']}
 
-def node_C2(state: State, config: RunnableConfig):
-    prompt = state["value"]
-    response = exec_func_C(None, prompt)
-    return {"value": response['content']}
+# def node_A1(state: State, config: RunnableConfig):
+#     prompt = state["value"]
+#     response = exec_func_A(None, prompt)
+#     return {"value": response['content']}
+
+# def node_A2(state: State, config: RunnableConfig):
+#     prompt = state["value"]
+#     response = exec_func_A(None, prompt)
+#     return {"value": response['content']}
+
+# def node_A3(state: State, config: RunnableConfig):
+#     prompt = state["value"]
+#     response = exec_func_A(None, prompt)
+#     return {"value": response['content']}
+
+# def node_A4(state: State, config: RunnableConfig):
+#     prompt = state["value"]
+#     response = exec_func_A(None, prompt)
+#     return {"value": response['content']}
+
+# def node_A5(state: State, config: RunnableConfig):
+#     prompt = state["value"]
+#     response = exec_func_A(None, prompt)
+
+#     data = [1, 2, 3, 4, 5]
+#     plt.plot(data)
+#     plt.title('Sample Graph')
+#     plt.xlabel('X-axis')                  # グラフ描画の処理
+#     plt.ylabel('Y-axis')
+#     plt.savefig('graph.png') # グラフの処理方法が悩みどころ
+
+#     return {"value": response['content']}
+
+# def node_A6(state: State, config: RunnableConfig):
+#     prompt = state["value"]
+#     response = exec_func_A(None, prompt)
+#     return {"value": response['content']}
 
 
 # 終了ノード
-def end_node(state: State, config: RunnableConfig):
+def node_End(state: State, config: RunnableConfig):
     prompt = state["value"]
     return {"value": f"終了: {prompt}"}
 
@@ -163,47 +161,48 @@ def end_node(state: State, config: RunnableConfig):
 graph_builder = StateGraph(State)
 
 # Nodeの追加
-graph_builder.add_node("start_node", start_node)
-graph_builder.add_node("node_A1", node_A1)
-graph_builder.add_node("node_A2", node_A2)
-graph_builder.add_node("node_A3", node_A3)
-graph_builder.add_node("node_A4", node_A4)
-graph_builder.add_node("node_A5", node_A5)
-graph_builder.add_node("node_A6", node_A6)
-graph_builder.add_node("node_B1", node_B1)
-graph_builder.add_node("node_C1", node_C1)
-graph_builder.add_node("node_C2", node_C2)
-graph_builder.add_node("end_node", end_node)
+graph_builder.add_node("node_Start", node_Start)
+graph_builder.add_node("node_Normal", node_Normal)
+graph_builder.add_node("node_Review", node_Review)
+graph_builder.add_node("node_Analyze", node_Analyze)
+# graph_builder.add_node("node_A1", node_A1)
+# graph_builder.add_node("node_A2", node_A2)
+# graph_builder.add_node("node_A3", node_A3)
+# graph_builder.add_node("node_A4", node_A4)
+# graph_builder.add_node("node_A5", node_A5)
+# graph_builder.add_node("node_A6", node_A6)
+graph_builder.add_node("node_End", node_End)
 
 # Graphの始点を宣言
-graph_builder.set_entry_point("start_node")
+graph_builder.set_entry_point("node_Start")
 
 # ルーティングの設定
-def routing(state: State, config: RunnableConfig) -> Literal["node_A1", "node_B1", "node_C1"]:
+def routing(state: State, config: RunnableConfig) -> Literal["node_Normal", "node_Review", "node_Analyze"]:
     random_num = random.randint(0, 2)
     if random_num == 0:
-        return "node_A1"
+        return "node_Normal"
     elif random_num == 1:
-        return "node_B1"
+        return "node_Review"
     else:
-        return "node_C1"
+        return "node_Analyze"
 
 # 条件分岐のエッジを追加
 graph_builder.add_conditional_edges( # 条件分岐のエッジを追加
-    'start_node',
+    'node_Start',
     routing, # 作ったルーティング
 )
 
 # Nodeをedgeに追加
-graph_builder.add_edge("node_A1", "node_A2")
-graph_builder.add_edge("node_A2", "node_A3")
-graph_builder.add_edge("node_A3", "node_A4")
-graph_builder.add_edge("node_A4", "node_A5")
-graph_builder.add_edge("node_A5", "node_A6")
-graph_builder.add_edge("node_C1", "node_C2")
+# graph_builder.add_edge("node_Analyze", "node_A1")
+# graph_builder.add_edge("node_A1", "node_A2")
+# graph_builder.add_edge("node_A2", "node_A3")
+# graph_builder.add_edge("node_A3", "node_A4")
+# graph_builder.add_edge("node_A4", "node_A5")
+# graph_builder.add_edge("node_A5", "node_A6")
+# graph_builder.add_edge("node_C1", "node_C2")
 
 # Graphの終点を宣言
-graph_builder.set_finish_point("end_node")
+graph_builder.set_finish_point("node_End")
 
 # Graphをコンパイル
 graph = graph_builder.compile()
