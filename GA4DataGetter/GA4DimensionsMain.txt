@@ -1,5 +1,5 @@
 ['pageTitle', 'pageLocation', 'percentScrolled', 'linkText', 'linkUrl', 'contentGroup']
-['sourceMedium', 'sessionSourceMedium', 'landingPage', 'dateHourMinute']
+['sessionSourceMedium', 'landingPage', 'dateHourMinute']
 ['newVsReturning', 'signedInWithUserId', 'firstSessionDate', 'landingPage', 'pageReferrer', 'percentScrolled']
 ['searchTerm', 'pageLocation', 'percentScrolled', 'newVsReturning', 'dateHourMinute']
 ['deviceCategory', 'language', 'country', 'region', 'city']

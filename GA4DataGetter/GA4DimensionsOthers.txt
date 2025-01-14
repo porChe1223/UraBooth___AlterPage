@@ -329,6 +329,7 @@ sessionSource
 sessionSourcePlatform
 shippingTier
 source
+sourceMedium
 sourcePlatform
 streamId
 streamName

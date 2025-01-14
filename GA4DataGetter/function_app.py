@@ -29,75 +29,74 @@ LIMIT = 1000                                    # 結果の制限数
 PROPERTY_ID = '469101596'                       # GA4のプロパティID
 
 # GA4で1つのディメンショングループと全てのメトリクスからレポート取得
-def get_report(
-            client: BetaAnalyticsDataClient,
-            dimension: str,
-            metric: str,
-            start_date: str,
-            end_date: str,
-            limit: int,
-    ):
-        try:
-            # 文字列をリストに変換
-            dimension_list = eval(dimension)
-            # ディメンションとメトリクスを設定
-            dim = [Dimension(name=dims) for dims in dimension_list]
-            met = [Metric(name=metric)]
+def get_report_parallel(
+    start_date: str,
+    end_date: str,
+    dimension: list,
+    metrics: list,
+    order_by: str = None,
+    limit: int = 1000,
+):
+    # def get_report(dimension: str, metric: str):
+    #     dim = [Dimension(name=dimension)]
+    #     met = [Metric(name=metric)]
 
-            # レポートリクエストの作成
-            request = RunReportRequest(
-                property=f'properties/{PROPERTY_ID}',
-                date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
-                dimensions=dim,
-                metrics=met,
-                order_bys=None,
-                limit=limit,
-            )
+    #     # レポートリクエストの作成
+    #     request = RunReportRequest(
+    #         property=f'properties/{PROPERTY_ID}',
+    #         date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+    #         dimensions=dim,
+    #         metrics=met,
+    #         order_bys=None,
+    #         limit=limit,
+    #     )
 
-            # レポートの実行
-            response = client.run_report(request)
-            logging.info(f'[SUCCESS]: Dimension: {dimension}, Metric: {metric}')
-            return response
-        except Exception as e:
-            logging.error(f'[FAIL]: Dimension: {dimension}, Metric: {metric}')
-            logging.error(e)
+    #     try:
+    #         # レポートの実行
+    #         response = client.run_report(request)
+    #         logging.info(f'[SUCCESS]: Dimension: {dimension}, Metric: {metric}')
+    #         return response
+    #     except Exception as e:
+    #         logging.error(f'[FAIL]: Dimension: {dimension}, Metric: {metric}')
+    #         logging.error(e)
+    #         return None
 
+    # # 並列処理
+    # try:
+    #     # GA4クライアントの初期化
+    #     client = BetaAnalyticsDataClient.from_service_account_file(KEY_FILE_LOCATION)
 
-# 並列処理
-def report_parallel(
-            client: BetaAnalyticsDataClient,
-            dimension: str,
-            metrics: str,
-            start_date: str,
-            end_date: str,
-            limit: int,
-            max_workers: int = 5,
-    ):
-    # レスポンスリストの初期化
-    responses = []
+    #     # レスポンスリストの初期化
+    #     responses = []
 
-    # 並列処理
-    with concurrent.futures.ThreadPoolExecutor(max_workers = max_workers) as executor:
-        futures = []
-        for metric in metrics:
-            # 並列処理の実行
-            future = (executor.submit(
-                get_report,
-                client,
-                dimension,
-                metric,
-                start_date,
-                end_date,
-                limit))
-            futures.append(future)
+    #     # 並列処理
+    #     with concurrent.futures.ThreadPoolExecutor() as executor:
+    #         # フューチャーオブジェクトの初期化
+    #         futures = []
+    #         # 文字列をリストに変換
+    #         dimension_list = eval(dimension)
+    #         # ディメンショングループとメトリクスの組み合わせでレポート取得
+    #         for dimension in dimension_list:
+    #             for metric in metrics:
+    #                 future = executor.submit(get_report, dimension, metric)
+    #                 futures.append(future)
+
+    #         # 完了したタスクを順次処理
+    #         for future in concurrent.futures.as_completed(futures):
+    #             response, dimension_name, metric_name = future.result()
+
+    #             if response is None:
+    #                 logging.error(f"組合せ互換性なし or 失敗: Dimension: {dimension_name}, Metric: {metric_name}")
+    #             else:
+    #                 responses.append(response)
+    #                 logging.info(f"レポート取得成功: Dimension: {dimension_name}, Metric: {metric_name}")
+    #         # 最終的に取得したレスポンス一覧を返す
         
-        # 完了したタスクを順次処理
-        for future in concurrent.futures.as_completed(futures):
-            response = future.result()
-            if response is not None:
-                responses.append(response)
+    #     return responses
 
-    return responses
+    # except Exception as e:
+    #     logging.error(f"GA4レポート取得中にエラーが発生しました: {e}")
+    #     raise
 
     #===============================
     # 並列処理ができない場合
@@ -105,49 +104,76 @@ def report_parallel(
     # - タイムアウトになる恐れがあるため却下
     #
     #===============================
-    # try:
-    #     # クライアントの初期化
-    #     client = BetaAnalyticsDataClient.from_service_account_file(KEY_FILE_LOCATION)
-    #     # レスポンスリストの初期化
-    #     responses = []
+    try:
+        # クライアントの初期化
+        client = BetaAnalyticsDataClient.from_service_account_file(KEY_FILE_LOCATION)
+        # レスポンスリストの初期化
+        responses = []
         
-    #     # １つのディメンショングループと全てのメトリクスからレポート取得
-    #     for metric in metrics:
-    #         try:
-    #             # 文字列をリストに変換
-    #             dimension_list = eval(dimension)
-    #             # ディメンションとメトリクスを設定
-    #             dim = [Dimension(name=dims) for dims in dimension_list]
-    #             met = [Metric(name=metric)]
+        # １つのディメンショングループと全てのメトリクスからレポート取得
+        for metric in metrics:
+            try:
+                # 文字列をリストに変換
+                dimension_list = eval(dimension)
+                # ディメンションとメトリクスを設定
+                dim = [Dimension(name=dims) for dims in dimension_list]
+                met = [Metric(name=metric)]
 
-    #             # レポートリクエストの作成
-    #             request = RunReportRequest(
-    #                 property=f'properties/{PROPERTY_ID}',
-    #                 date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
-    #                 dimensions=dim,
-    #                 metrics=met,
-    #                 order_bys=None,
-    #                 limit=limit,
-    #             )
+                # レポートリクエストの作成
+                request = RunReportRequest(
+                    property=f'properties/{PROPERTY_ID}',
+                    date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+                    dimensions=dim,
+                    metrics=met,
+                    order_bys=None,
+                    limit=limit,
+                )
 
-    #             # レポートの実行
-    #             response = client.run_report(request)
-    #             # レスポンスをレスポンスリストに追加
-    #             responses.append(response)
-    #             logging.info(f'[SUCCESS]: Dimension: {dimension}, Metric: {metric}')
-    #         except Exception as e:
-    #             logging.error(f'[FAIL]: Dimension: {dimension}, Metric: {metric}')
-    #             logging.error(e)
+                # レポートの実行
+                response = client.run_report(request)
+                # レスポンスをレスポンスリストに追加
+                responses.append(response)
+                logging.info(f'[SUCCESS]: Dimension: {dimension}, Metric: {metric}')
+            except Exception as e:
+                logging.error(f'[FAIL]: Dimension: {dimension}, Metric: {metric}')
+                logging.error(e)
         
-    #     # レスポンスリストを返す
-    #     return responses
+        # レスポンスリストを返す
+        return responses
     
-    # except Exception as e:
-    #     logging.error(f'ERROR: GA4レポート取得中にエラーが発生しました')
-    #     logging.error(e)
-    #     raise
-        
+    except Exception as e:
+        logging.error(f'ERROR: GA4レポート取得中にエラーが発生しました')
+        logging.error(e)
+        raise
 
+
+###############################
+## レポート情報をJSON型に変換
+##
+def format_response_as_json(responses):
+    try:
+        result = []
+        def process_response(response):
+            for row in response.rows:
+                data = {
+                    "dimensions": {dim.name: dim_value.value for dim, dim_value in zip(response.dimension_headers, row.dimension_values)},
+                    "metrics": {metric.name: metric_value.value for metric, metric_value in zip(response.metric_headers, row.metric_values)}
+                }
+                result.append(data)
+        
+        # リストである場合
+        if isinstance(responses, list):
+            for response in responses:
+                process_response(response)
+        # 単一のRunReportResponseオブジェクトである場合
+        else:
+            process_response(responses)
+        
+        return json.dumps(result, indent=4, ensure_ascii=False)
+
+    except Exception as e:
+        logging.error(f'JSON形式への変換中にエラーが発生しました: {e}')
+        raise
 
 #################################
 ## Main関数
@@ -207,7 +233,7 @@ def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage], outputDocument
         for dimension, category in zip(DIMENSIONS, categories):
             # GA4レポート取得
             logging.info(f'[START]: {category} のレポート情報取得')
-            response = report_parallel(
+            response = get_report_parallel(
                 START_DATE,
                 END_DATE,
                 dimension,
@@ -217,9 +243,13 @@ def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage], outputDocument
             )
             logging.info(f'[END]: {category} のレポート情報取得')
 
-            # CosmosDBデータリストに追加
-            doc[category] = response
+            # レポート情報をJSON型に変換
+            logging.info('開始: Json化')
+            response_json = format_response_as_json(response)
+            logging.info('終了: Json化')
 
+            # CosmosDBデータリストに追加
+            doc[category] = response_json
 
         # CosmosDB用のデータリストに追加
         logging.info('[START]: CosmosDBに出力')
