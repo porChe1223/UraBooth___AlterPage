@@ -15,7 +15,7 @@ app = func.FunctionApp()
 @app.route(route="data", auth_level=func.AuthLevel.ANONYMOUS)
 def GetDBInfo(req: func.HttpRequest) -> func.HttpResponse:
     # 日付範囲をリクエストパラメータから取得
-    range = req.params.get('data_range')
+    range = req.params.get('range')
 
     # Cosmos DB から情報を取得
     try:
