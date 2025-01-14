@@ -181,6 +181,7 @@ def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage], outputDocument
         else:
             START_DATE = range.split('to')[0]                  # レポートの開始日(指定日)
             END_DATE = range.split('to')[1]                    # レポートの終了日(指定日)
+            DATE_RANGE = range                                # レポートの範囲(アイテムのIDに相当)
 
         # CosmosDBデータリスト初期化
         docs = []
