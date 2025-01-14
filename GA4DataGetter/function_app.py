@@ -60,7 +60,7 @@ def get_ga4_report(start_date, end_date, dimensions, metrics, order_by_metric, l
     try:
         # クライアントの初期化
         client = BetaAnalyticsDataClient.from_service_account_file(KEY_FILE_LOCATION)
-
+        
         results = []
 
         for dimension in dimensions:
@@ -71,7 +71,7 @@ def get_ga4_report(start_date, end_date, dimensions, metrics, order_by_metric, l
                     logging.info(f"レポート取得成功: Dimension: {dimension}, Metric: {metric}")
                     logging.info(response)
                 else:
-                    logging.error(f"組合せ互換性なし: Dimension: {dimension}, Metric: {metric}")
+                    logging.error(f"レポート取得失敗: Dimension: {dimension}, Metric: {metric}")
 
         return results
     except Exception as e:
@@ -115,35 +115,29 @@ def get_ga4_report(start_date, end_date, dimensions, metrics, order_by_metric, l
 # レポート情報をJSON型に変換 #
 ############################
 
-def format_response_as_json(responses):
+def format_response_as_json(responses, categories):
     try:
-        result = []
+        result = {}
 
-        def process_response(response):
-            # # タプルの場合、最初の要素だけを使用
-            # if isinstance(response, tuple):
-            #     response = response[0]
-
-            # # Noneをスキップ
-            # if response is None:
-            #     return
-
+        def process_response(response, category):
             # rowsにアクセスしてデータを処理
+            category_data = []
             for row in response.rows:
                 data = {
                     "dimensions": {dim.name: dim_value.value for dim, dim_value in zip(response.dimension_headers, row.dimension_values)},
                     "metrics": {metric.name: metric_value.value for metric, metric_value in zip(response.metric_headers, row.metric_values)}
                 }
-                result.append(data)
+                category_data.append(data)
+            result[category] = category_data
         
         # リストである場合
         if isinstance(responses, list):
-            for response in responses:
-                process_response(response)
+            for response, category in zip(responses, categories):
+                process_response(response, category)
 
         # 単一のRunReportResponseオブジェクトである場合
         else:
-            process_response(responses)
+            process_response(responses, categories[0])
         
         return json.dumps(result, indent=4, ensure_ascii=False)
 
@@ -165,20 +159,18 @@ app = func.FunctionApp()
 
 def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage], outputDocument: func.Out[func.Document]) -> func.HttpResponse:
     try:
-        start = req.params.get('start')
-        end = req.params.get('end')
+        range = req.params.get('range')
 
-        if not start or not end:
+        if not range:
             today = datetime.date.today()
             last_month = today - datetime.timedelta(days=30)
             START_DATE = str(last_month) # レポートの開始日(今日)
             END_DATE = str(today) # レポートの終了日(1か月前)]
-            
-        if start and end:
-            START_DATE = start # レポートの開始日(指定日)
-            END_DATE = end # レポートの終了日(指定日)
+            DATE_RANGE = START_DATE  + 'to' + END_DATE # レポートの範囲(アイテムのIDに相当)
+        if range:
+            START_DATE = range.split('to')[0] # レポートの開始日(指定日)
+            END_DATE = range.split('to')[1] # レポートの終了日(指定日)
 
-        DATE_RANGE = START_DATE  + ' to ' + END_DATE # レポートの範囲(アイテムのIDに相当)
         # GA4からのレポート情報取得
         logging.info('開始: レポート情報取得')
         response = get_ga4_report(START_DATE, END_DATE, DIMENSIONS, METRICS, ORDER_BY_METRIC, LIMIT)
@@ -186,7 +178,15 @@ def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage], outputDocument
 
         # レポート情報をJSON型に変換
         logging.info('開始: Json化')
-        results = format_response_as_json(response)
+        categories = [
+            'ページ関連情報',
+            'トラフィックソース関連情報',
+            'ユーザー行動関連情報',
+            'サイト内検索関連情報',
+            'デバイスおよびユーザ属性関連情報',
+            '時間帯関連情報'
+        ]
+        results = format_response_as_json(response, categories)
         logging.info('終了: Json化')
 
         # Cosmos DB に出力
