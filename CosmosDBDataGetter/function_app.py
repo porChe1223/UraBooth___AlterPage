@@ -15,7 +15,7 @@ app = func.FunctionApp()
 @app.route(route="data", auth_level=func.AuthLevel.ANONYMOUS)
 def GetDBInfo(req: func.HttpRequest) -> func.HttpResponse:
     # 日付範囲をリクエストパラメータから取得
-    data_range = req.params.get('data_range')
+    range = req.params.get('data_range')
 
     # Cosmos DB から情報を取得
     try:
@@ -26,15 +26,15 @@ def GetDBInfo(req: func.HttpRequest) -> func.HttpResponse:
         # 出力用変数
         all_data = {}
 
-        if not data_range:
+        if not range:
             # コンテナから全てのアイテムを取得
             items = list(container.read_all_items())
             for item in items:
                 all_data[CONTAINER_NAME] = items
 
-        if data_range:
+        if range:
             # コンテナから指定したアイテムを取得
-            ITEM_ID = data_range
+            ITEM_ID = range
             try:
                 item = container.read_item(item=ITEM_ID, partition_key=ITEM_ID)
                 all_data[CONTAINER_NAME] = item
