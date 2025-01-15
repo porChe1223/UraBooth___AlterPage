@@ -20,7 +20,6 @@ from langchain_core.utils.function_calling import convert_to_openai_function
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt.tool_executor import ToolExecutor, ToolInvocation
-from langgraph.prebuilt import ToolNode
 import re
 
 tavily_tool = TavilySearchResults(max_results=5)
