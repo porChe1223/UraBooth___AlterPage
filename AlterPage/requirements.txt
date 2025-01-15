@@ -1,0 +1,7 @@
+chainlit
+langchain
+langgraph
+langchain-openai
+openai
+matplotlib
+python-dotenv
