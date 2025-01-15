@@ -1,7 +1,9 @@
 chainlit
 langchain
+langchian-community
 langgraph
 langchain-openai
 openai
 matplotlib
+jinja2
 python-dotenv
