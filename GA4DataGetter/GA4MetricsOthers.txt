@@ -10,6 +10,10 @@ averagePurchaseRevenuePerUser
 averageRevenuePerUser
 cartToViewRate
 checkouts
+cohortActiveUsers
+cohortTotalUsers
+crashAffectedUsers
+crashFreeUsersRate
 ecommercePurchases
 firstTimePurchaserRate
 firstTimePurchasers

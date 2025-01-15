@@ -106,23 +106,27 @@ def get_report_parallel(
         dimension_list = eval(dimension)
         # ディメンショングループからまとめて作成
         dim = [Dimension(name=dims) for dims in dimension_list]
-        # メトリクスをまとめて作成
-        met = [Metric(name=m) for m in metrics]
+        # メトリクスを10個ずつまとめて作成
+        for i in range(0, len(metrics), 10):
+            divided_metrics = metrics[i : i + 10]
+            met = [Metric(name=mets) for mets in divided_metrics]
 
-        # 一括リクエスト
-        request = RunReportRequest(
-            property=f'properties/{PROPERTY_ID}',
-            date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
-            dimensions=dim,
-            metrics=met,
-            limit=limit,
-        )
-        response = client.run_report(request)
+            # 一括リクエスト
+            request = RunReportRequest(
+                property=f'properties/{PROPERTY_ID}',
+                date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+                dimensions=dim,
+                metrics=met,
+                limit=limit,
+            )
+            # レポートの実行
+            response = client.run_report(request)
 
-        # 今まで metric ごとに複数のレスポンスを得ていたので、レスポンスの扱いをどうするか注意
-        # ここでは "responses" にひとまず1件のレスポンスを入れる形にしている
-        responses.append(response)
-        logging.info(f'[SUCCESS]: Dimension: {dimension}, Metric: {met}')
+            # レスポンスをレスポンスリストに追加
+            responses.append(response)
+            logging.info(f'[SUCCESS]: Dimension: {dimension}, Metric: {met}')
+
+        return responses 
 
     except Exception as e:
         logging.error(f'[FAIL]: Dimension: {dimension}, Metric: {met}')

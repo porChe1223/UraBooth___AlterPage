@@ -5,10 +5,6 @@ activeUsers
 adUnitExposure
 averageSessionDuration
 bounceRate
-cohortActiveUsers
-cohortTotalUsers
-crashAffectedUsers
-crashFreeUsersRate
 dauPerMau
 dauPerWau
 engagedSessions
