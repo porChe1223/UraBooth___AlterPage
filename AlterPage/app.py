@@ -11,13 +11,17 @@ from langchain.prompts.chat import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate
 )
+from langchain.schema import Document
+from langchain.vectorstores import Chroma
 from dotenv import load_dotenv
 import os
 import time
 import random
 import matplotlib.pyplot as plt
+import langchain.vectorstores
 import logging
 import chainlit as cl
+import requests
 
 # 環境変数読み込み
 load_dotenv()
@@ -58,12 +62,32 @@ def txt_read(txtfile):
 " ブログの改善提案   "
 " ここに関数を入れる "
 """"""""""""""""""""
+################ データ取得の関数定義 ##########################
+
+urls1 = ["https://cosmosdbdatagetter.azurewebsites.net/data",]
+urls2 = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=ページ関連情報",]
+urls3 = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=トラフィックソース関連情報",]
+urls4 = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=ユーザー行動関連情報",]
+urls5 = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=サイト内検索関連情報",]
+urls6 = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=デバイスおよびユーザ属性関連情報",]
+urls7 = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=時間帯関連情報",]
+
 def call_Analyze(llm, user_prompt):
-    # プロンプト評価用のシステムプロンプト
+    llm = ChatOpenAI(model_name="gpt-4o-mini",
+                    temperature=0,
+                    openai_api_key=openai_api_key
+                    )
+    url = "https://cosmosdbdatagetter.azurewebsites.net/data?group=ページ関連情報"
+    print(url)
+    #url = "https://～.azurewebsites.net/data?group=ページ関連情報"
+    response = requests.get(url)
+    print(response.text)
+
     system_prompt_Evaluate = PromptTemplate(
         input_variables = ["user_prompt"],
-        template = txt_read("resource/rag_data/ga4Info.txt") + "\n\nプロンプト: {user_prompt}\n\nプロンプトの評価:"
-    )
+        template =  response.text,
+        template_format="jinja2"
+        )
     # チェーンの宣言
     chain = (
         system_prompt_Evaluate
@@ -71,6 +95,24 @@ def call_Analyze(llm, user_prompt):
     )
     # チェーンの実行
     return chain.invoke({"user_prompt": user_prompt})
+
+#AIエージェントがユーザの質問（7個の質問かその他の質問か）を分類し、適切なワークフロー（tool01かtool2）を呼び出すための関数の定義
+
+def select_tool(llm, user_prompt):
+    # プロンプトの作成
+    classification_prompt = PromptTemplate(
+        input_variables = ["user_prompt"], #tool1かtool2が選択される
+        template = txt_read("resource/sys_prompt/classification_prompt.txt") + "\n\nプロンプト: {user_prompt}"
+    )
+    # チェーンの宣言
+    chain = (
+        classification_prompt
+        | llm
+    )
+    # チェーンの実行
+    return chain.invoke({"user_prompt": user_prompt})
+
+#############################################
 
 # プロンプトの評価
 def call_Review(llm, user_prompt):
@@ -138,6 +180,27 @@ def node_Others(state: State, config: RunnableConfig):
     response = call_Others(llm, prompt)
     return {"message": response.content}
 
+### ここにデータ取得の関数を追加する ###
+
+# 全データ取得ノード
+def node_DataGet(state: State, config: RunnableConfig, url:list=urls1):
+    if url is None:
+        url = ["https://cosmosdbdatagetter.azurewebsites.net/data"]
+    prompt = state["message"]
+    result_data = call_Analyze(llm,prompt)
+    return {"message":result_data}
+
+# ページ関連情報取得ノード
+def node_DataGet_page(state: State, config: RunnableConfig, url:list=urls2):
+    if url is None:
+        url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=ページ関連情報"]
+
+    prompt = state["message"]
+    print(prompt)
+    result_data = call_Analyze(llm, prompt)
+    print(result_data)
+    return {"message":result_data}
+
 # 終了ノード
 def node_End(state: State, config: RunnableConfig):
     return {"message": "終了"}
@@ -155,6 +218,8 @@ graph_builder.add_node("node_Start", node_Start)
 graph_builder.add_node("node_Analyze", node_Analyze)
 graph_builder.add_node("node_Review", node_Review)
 graph_builder.add_node("node_Others", node_Others)
+graph_builder.add_node("node_DataGet", node_DataGet)
+graph_builder.add_node("node_DataGet_page", node_DataGet_page)
 graph_builder.add_node("node_End", node_End)
 
 # Graphの始点を宣言
@@ -180,8 +245,17 @@ graph_builder.add_conditional_edges( # 条件分岐のエッジを追加
     routing, # 作ったルーティング
 )
 
+graph_builder.add_conditional_edges(
+    "node_Analyze",
+    lambda state: state["message_type"],
+    {
+        "tool01": "node_DataGet_page",
+        "tool02": "node_DataGet",
+    },
+)
+
 # Nodeをedgeに追加
-graph_builder.add_edge("node_Analyze", "node_End")
+graph_builder.add_edge("node_DataGet_page", "node_End")
 graph_builder.add_edge("node_Review", "node_End")
 graph_builder.add_edge("node_Others", "node_End")
 
