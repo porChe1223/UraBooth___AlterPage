@@ -62,7 +62,7 @@ def call_Analyze(llm, user_prompt):
     # プロンプト評価用のシステムプロンプト
     system_prompt_Evaluate = PromptTemplate(
         input_variables = ["user_prompt"],
-        template = txt_read("RAG_GAInfo.txt") + "\n\nプロンプト: {user_prompt}\n\nプロンプトの評価:"
+        template = txt_read("resource/rag_data/ga4Info.txt") + "\n\nプロンプト: {user_prompt}\n\nプロンプトの評価:"
     )
     # チェーンの宣言
     chain = (
@@ -77,7 +77,7 @@ def call_Review(llm, user_prompt):
     # プロンプト評価用のシステムプロンプト
     system_prompt_Evaluate = PromptTemplate(
         input_variables = ["user_prompt"],
-        template = txt_read("RAG_evaluationprompt.txt") + "\n\nプロンプト: {user_prompt}\n\nプロンプトの評価:"
+        template = txt_read("resource/sys_prompt/evaluation.txt") + "\n\nプロンプト: {user_prompt}\n\nプロンプトの評価:"
     )
     # チェーンの宣言
     chain = (
@@ -92,7 +92,7 @@ def call_Others(llm, user_prompt):
     # Alterboothのシステムプロンプト
     system_prompt_Alterbooth = PromptTemplate(
         input_variables = ['user_prompt'],
-        template = txt_read("RAG_Alterbooth.txt") + "\n\nプロンプト: {user_prompt}"
+        template = txt_read("resource/rag_data/alterbooth.txt") + "\n\nプロンプト: {user_prompt}"
     )
     # チェーンの宣言
     chain = (
