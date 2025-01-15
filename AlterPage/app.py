@@ -96,13 +96,13 @@ def call_Analyze(llm, user_prompt):
     # チェーンの実行
     return chain.invoke({"user_prompt": user_prompt})
 
-#AIエージェントがユーザの質問（7個の質問かその他の質問か）を分類し、適切なワークフロー（tool01かtool2）を呼び出すための関数の定義
+#AIエージェントがユーザの質問を分類し、適切なワークフロー（tool01かtool2）を呼び出すための関数の定義
 
 def select_tool(llm, user_prompt):
     # プロンプトの作成
     classification_prompt = PromptTemplate(
         input_variables = ["user_prompt"], #tool1かtool2が選択される
-        template = txt_read("resource/sys_prompt/classification_prompt.txt") + "\n\nプロンプト: {user_prompt}"
+        template = txt_read("resource/sys_prompt/classification.txt") + "\n\nプロンプト: {user_prompt}"
     )
     # チェーンの宣言
     chain = (
@@ -111,6 +111,22 @@ def select_tool(llm, user_prompt):
     )
     # チェーンの実行
     return chain.invoke({"user_prompt": user_prompt})
+
+#AIエージェントがユーザの質問を分類し、適切なワークフロー（route01~route06）を呼び出すための関数の定義
+def classify_tool(llm, user_prompt):
+    # プロンプトの作成
+    classification_prompt = PromptTemplate(
+        input_variables = ["user_prompt"], #route01~route06が選択される
+        template = txt_read("resource/sys_prompt/specific_classify.txt") + "\n\nプロンプト: {user_prompt}"
+    )
+    # チェーンの宣言
+    chain = (
+        classification_prompt
+        | llm
+    )
+    # チェーンの実行
+    return chain.invoke({"user_prompt": user_prompt})
+
 
 #############################################
 
@@ -144,6 +160,25 @@ def call_Others(llm, user_prompt):
     # チェーンの実行
     return chain.invoke({"user_prompt": user_prompt})
 
+# 渡されたデータの分析をする関数の定義
+def call_Analyze(llm, user_prompt):
+    # データ取得のシステムプロンプト
+    system_prompt_Analyze = PromptTemplate(
+        input_variables = ["user_prompt"],
+        template = (
+            txt_read("resource/rag_data/ga4Info.txt") + 
+            txt_read("resource/rag_data/alterbooth.txt") + 
+            "\n\nプロンプト: {user_prompt}"
+        )
+    )
+    # チェーンの宣言
+    chain = (
+        system_prompt_Analyze
+        | llm
+    )
+    # チェーンの実行
+    return chain.invoke({"user_prompt": user_prompt})
+
 
 
 ###############
@@ -161,12 +196,12 @@ def node_Start(state: State, config: RunnableConfig):
     return {"message": state["message"]}
 
 # ブログの改善ノード
-def node_Analyze(state: State, config: RunnableConfig):
+def node_Main(state: State, config: RunnableConfig):
     prompt = state["message"]
-    response = call_Analyze(llm, prompt)
-    logging.info(f"[DEBUG] response: {response}")
-    logging.info(f"[DEBUG] response.content: {response.content}")
-    return {"message": response.content}
+    response = select_tool(llm, prompt)
+    #logging.info(f"[DEBUG] response: {response}")
+    #logging.info(f"[DEBUG] response.content: {response.content}")
+    return {"message_type": response.content, "messages": prompt}
 
 # プロンプトの評価ノード
 def node_Review(state: State, config: RunnableConfig):
@@ -180,7 +215,14 @@ def node_Others(state: State, config: RunnableConfig):
     response = call_Others(llm, prompt)
     return {"message": response.content}
 
-### ここにデータ取得の関数を追加する ###
+# ユーザの質問を細かく分類するノード
+def node_Classify(state: State, config: RunnableConfig):
+    prompt = state["message"]
+    response = classify_tool(llm, prompt)
+    return {"message_type": response.content, "messages": prompt}
+
+
+############## ここにデータ取得の関数を追加する ####################
 
 # 全データ取得ノード
 def node_DataGet(state: State, config: RunnableConfig, url:list=urls1):
@@ -194,12 +236,66 @@ def node_DataGet(state: State, config: RunnableConfig, url:list=urls1):
 def node_DataGet_page(state: State, config: RunnableConfig, url:list=urls2):
     if url is None:
         url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=ページ関連情報"]
-
     prompt = state["message"]
-    print(prompt)
+    #print(prompt)
     result_data = call_Analyze(llm, prompt)
-    print(result_data)
+    #print(result_data)
     return {"message":result_data}
+
+# トラフィックソース関連情報取得ノード
+def node_DataGet_traffic(state: State, config: RunnableConfig,url:list=urls3):
+    if url is None:
+        url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=トラフィックソース関連情報"]
+    prompt = state["message"]
+    result_data = call_Analyze(llm, prompt)
+    return {"message":result_data}
+
+# ユーザー関連情報取得ノード
+def node_DataGet_user(state: State, config: RunnableConfig,url:list=urls4):
+    if url is None:
+        url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=ユーザー関連情報"]
+    prompt = state["message"]
+    result_data = call_Analyze(llm, prompt)
+    return {"message":result_data}
+
+# サイト内検索情報取得ノード
+def node_DataGet_search(state: State, config: RunnableConfig,url:list=urls5):
+    if url is None:
+        url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=サイト内検索関連情報"]
+    prompt = state["message"]
+    result_data = call_Analyze(llm, prompt)
+    return {"message":result_data}
+
+# デバイスおよびユーザー属性情報取得ノード
+def node_DataGet_device(state: State, config: RunnableConfig,url:list=urls6):
+    if url is None:
+        url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=デバイスおよびユーザー属性関連情報"]
+    prompt = state["message"]
+    result_data = call_Analyze(llm, prompt)
+    return {"message":result_data}
+
+# 時間帯関連情報取得ノード
+def node_DataGet_time(state: State, config: RunnableConfig,url:list=urls7):
+    if url is None:
+        url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=時間帯関連情報"]
+    prompt = state["message"]
+    result_data = call_Analyze(llm, prompt)
+    return {"message":result_data}
+
+####################################################
+
+# データを分析するノード
+def node_Analyze(state: State, config: RunnableConfig):
+    prompt = state["message"]
+    response = call_Analyze(llm, prompt)
+    return {"message": f"分析結果: {response.content}"}
+
+# プロンプトの評価ノード
+def node_Review(state: State, config: RunnableConfig):
+    prompt = state["message"]
+    response = call_Review(llm, prompt)
+    return { "message": response.content }
+
 
 # 終了ノード
 def node_End(state: State, config: RunnableConfig):
@@ -215,11 +311,18 @@ graph_builder = StateGraph(State)
 
 # Nodeの追加
 graph_builder.add_node("node_Start", node_Start)
-graph_builder.add_node("node_Analyze", node_Analyze)
+graph_builder.add_node("node_Main", node_Main)
 graph_builder.add_node("node_Review", node_Review)
 graph_builder.add_node("node_Others", node_Others)
+graph_builder.add_node("node_Classify", node_Classify)
 graph_builder.add_node("node_DataGet", node_DataGet)
 graph_builder.add_node("node_DataGet_page", node_DataGet_page)
+graph_builder.add_node("node_DataGet_traffic", node_DataGet_traffic)
+graph_builder.add_node("node_DataGet_user", node_DataGet_user)
+graph_builder.add_node("node_DataGet_search", node_DataGet_search)
+graph_builder.add_node("node_DataGet_device", node_DataGet_device)
+graph_builder.add_node("node_DataGet_time", node_DataGet_time)
+graph_builder.add_node("node_Analyze", node_Analyze)
 graph_builder.add_node("node_End", node_End)
 
 # Graphの始点を宣言
@@ -228,8 +331,8 @@ graph_builder.set_entry_point("node_Start")
 # ルーティングの設定
 def routing(state: State, config: RunnableConfig):
     if 'ブログ' in state['message']:
-        logging.info(f"[DEBUG] Routing to node_Analyze")
-        return "node_Analyze"
+        logging.info(f"[DEBUG] Routing to node_Main")
+        return "node_Main"
     
     elif 'プロンプト' in state['message'] and '評価' in state['message']:
         logging.info(f"[DEBUG] Routing to node_Review")
@@ -246,21 +349,42 @@ graph_builder.add_conditional_edges( # 条件分岐のエッジを追加
 )
 
 graph_builder.add_conditional_edges(
-    "node_Analyze",
+    "node_Main",
     lambda state: state["message_type"],
     {
-        "tool01": "node_DataGet_page",
+        "tool01": "node_Classify",
         "tool02": "node_DataGet",
     },
 )
 
+graph_builder.add_conditional_edges(
+    "node_Classify",
+    lambda state: state["message_type"],
+    {
+        "route01": "node_DataGet_page",
+        "route02": "node_DataGet_traffic",
+        "route03": "node_DataGet_user",
+        "route04": "node_DataGet_search",
+        "route05": "node_DataGet_device",
+        "route06": "node_DataGet_time",
+    },
+)
+
+
 # Nodeをedgeに追加
-graph_builder.add_edge("node_DataGet_page", "node_End")
+graph_builder.add_edge("node_DataGet_page", "node_Analyze")
+graph_builder.add_edge("node_DataGet_traffic", "node_Analyze")
+graph_builder.add_edge("node_DataGet_user", "node_Analyze")
+graph_builder.add_edge("node_DataGet_search", "node_Analyze")
+graph_builder.add_edge("node_DataGet_device", "node_Analyze")
+graph_builder.add_edge("node_DataGet_time", "node_Analyze")
+graph_builder.add_edge("node_Analyze", "node_End")
+
 graph_builder.add_edge("node_Review", "node_End")
 graph_builder.add_edge("node_Others", "node_End")
 
 # Graphの終点を宣言
-# graph_builder.set_finish_point("node_Analyze")
+# graph_builder.set_finish_point("node_Main")
 # graph_builder.set_finish_point("node_Review")
 # graph_builder.set_finish_point("node_Others")
 
