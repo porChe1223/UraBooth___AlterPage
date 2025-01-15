@@ -437,7 +437,8 @@ def data_get(urls,prompt):
     
     query = prompt
     answer = index.query(query,llm)
-    print(answer)
+    return answer
+    #print(answer)
 
 
 """
@@ -464,6 +465,30 @@ def data_get(urls,prompt):
     
     return results
 """
+
+def call_Analyze(llm, user_prompt):
+    llm = ChatOpenAI(model_name="gpt-4o-mini",
+                    temperature=0,
+                    openai_api_key=openai_api_key
+                    )
+    url = "https://cosmosdbdatagetter.azurewebsites.net/data?group=ページ関連情報"
+    print(url)
+    #url = "https://～.azurewebsites.net/data?group=ページ関連情報"
+    response = requests.get(url)
+    print(response.text)
+
+    system_prompt_Evaluate = PromptTemplate(
+        input_variables = ["user_prompt"],
+        template =  response.text,
+        template_format="jinja2"
+        )
+    # チェーンの宣言
+    chain = (
+        system_prompt_Evaluate
+        | llm
+    )
+    # チェーンの実行
+    return chain.invoke({"user_prompt": user_prompt})
 ####################################################
 
 ###############
@@ -519,10 +544,9 @@ def node_DataGet_page(state: State, config: RunnableConfig, url:list=urls2):
 
     prompt = state["message"]
     print(prompt)
-    result_data = data_get(url,prompt)
+    result_data = call_Analyze(llm, prompt)
     print(result_data)
     return {"message":result_data}
-
 
 
 # トラフィックソース関連情報取得ノード
