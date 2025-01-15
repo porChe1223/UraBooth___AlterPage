@@ -42,6 +42,7 @@ class MessageType(BaseModel):
 class ToolType(BaseModel):
     message_type: str = Field(description="Must use the Tool", example="tool01" or "tool02")
 
+
 #AIエージェントがユーザの質問（7個の質問かその他の質問か）を分類し、適切なワークフロー（tool01かtool2）を呼び出すための関数の定義
 
 #出力を固定するため
@@ -75,7 +76,7 @@ classifier = llm.with_structured_output(MessageType)
 #from FUNC_datagetter import data_get
 
 #tool01に分類されたノードで実行される関数を定義
-def classify(State):
+def specific_analyze(State):
     # プロンプトの作成
     classification_prompt1 = PromptTemplate(
         prompt = txt_read("RAG_specific_analyze.txt"),
@@ -217,6 +218,15 @@ graph_builder.set_finish_point("response")
 
 # グラフ構築
 graph = graph_builder.compile()
+
+
+
+
+
+
+
+
+
 
 
 
