@@ -5,8 +5,10 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langchain_openai import OpenAIEmbeddings
+from langchain.document_loaders import UnstructuredURLLoader
 from langchain.vectorstores import Chroma
 from langchain.prompts import PromptTemplate
+from langchain.schema import Document
 from langchain_core.tools import tool
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_experimental.utilities import PythonREPL
@@ -19,6 +21,8 @@ from langchain_core.messages import (
 )
 from langchain_core.utils.function_calling import convert_to_openai_function
 from langchain_core.prompts import MessagesPlaceholder
+from langchain.indexes import VectorstoreIndexCreator
+from langchain.text_splitter import CharacterTextSplitter
 from langgraph.prebuilt.tool_executor import ToolExecutor, ToolInvocation
 from langchain.prompts.chat import (
     SystemMessagePromptTemplate,
@@ -43,6 +47,7 @@ import json
 import functools
 import operator
 import re
+import requests
 
 
 tavily_tool = TavilySearchResults(max_results=5)
@@ -99,19 +104,28 @@ class ToolType(BaseModel):
 #出力を固定するため
 tools = llm.with_structured_output(ToolType)
 
-def select_tool(State):
+def select_tool(llm, user_prompt):
     # プロンプトの作成
     classification_prompt = PromptTemplate(
-        prompt = txt_read("RAG_classification_prompt.txt"),
-        input_variables = ["messages"] #tool1かtool2が選択される
+        input_variables = ["user_prompt"], #tool1かtool2が選択される
+        template = txt_read("RAG_classification_prompt.txt") + "\n\nプロンプト: {user_prompt}"
     )
-    if State["messages"]:
-        return {
-            "message_type": tools.invoke(classification_prompt.format(user_message=State["messages"])).message_type,
-            "messages": State["messages"]
-            }
-    else:
-        return {"message": "No user input provided"}
+    # チェーンの宣言
+    chain = (
+        classification_prompt
+        | llm
+    )
+    # チェーンの実行
+    return chain.invoke({"user_prompt": user_prompt})
+
+    #if State["messages"]:
+    #    return {
+    #        "message_type": tools.invoke(classification_prompt.format(user_message=State["messages"])).message_type,
+    #        "messages": State["messages"]
+    #        }
+    #else:
+    #    return {"message": "No user input provided"}
+    
 
 # tool01で利用する、ユーザの質問を分類するLLMノードを定義
 
@@ -134,51 +148,10 @@ def specific_analyze(State):
         return {"message": "No user input provided"}
     
 #tool01ワークフローの質問回答LLMノードを定義
-def q_1(State):
-    if State["messages"]:
-        State["messages"][0] = ("system", "あなたはユーザからの質問を繰り返してください。その後、質問に回答してください。ただし今日は雨です")
-        return {"messages": llm.invoke(State["messages"])}
-    return {"messages": "No user input provided"}
-
-def q_2(State):
-    if State["messages"]:
-        State["messages"][0] = ("system", "あなたはユーザの質問内容を繰り返し発言した後、それに対して回答してください。ただし今日は10/23です")
-        return {"messages": llm.invoke(State["messages"])}
-    return {"messages": "No user input provided"}
-
-def q_3(State):
-    if State["messages"]:
-        State["messages"][0] = ("system", "あなたはユーザからの質問を繰り返してください。その後、質問に回答してください。ただし今日は雨です")
-        return {"messages": llm.invoke(State["messages"])}
-    return {"messages": "No user input provided"}
-
-def q_4(State):
-    if State["messages"]:
-        State["messages"][0] = ("system", "あなたはユーザの質問内容を繰り返し発言した後、それに対して回答してください。ただし今日は10/23です")
-        return {"messages": llm.invoke(State["messages"])}
-    return {"messages": "No user input provided"}
-
-def q_5(State):
-    if State["messages"]:
-        State["messages"][0] = ("system", "あなたはユーザからの質問を繰り返してください。その後、質問に回答してください。ただし今日は雨です")
-        return {"messages": llm.invoke(State["messages"])}
-    return {"messages": "No user input provided"}
-
-def q_6(State):
-    if State["messages"]:
-        State["messages"][0] = ("system", "あなたはユーザの質問内容を繰り返し発言した後、それに対して回答してください。ただし今日は10/23です")
-        return {"messages": llm.invoke(State["messages"])}
-    return {"messages": "No user input provided"}
-
-def q_7(State):
-    if State["messages"]:
-        State["messages"][0] = ("system", "あなたはユーザからの質問を繰り返してください。その後、質問に回答してください。ただし今日は雨です")
-        return {"messages": llm.invoke(State["messages"])}
-    return {"messages": "No user input provided"}
 
 # tool1の最終出力ノードを定義
-def response(State):
-    return State
+#def response(State):
+    #return State
 
 #tool02に分類されたノードで実行される関数を定義
 
@@ -253,9 +226,9 @@ chart_agent= create_agent(
 # 分岐1のワークフローを作成する #
 ############################
 #子ノードを流れるデータの型を定義
-class ChildState(TypedDict, total=False):
-    message_type: Optional[str]
-    messages: Optional[str]
+
+#ノードの宣言
+# 開始ノード
 
 
 ############################
@@ -387,26 +360,6 @@ workflow2.add_conditional_edges(
     },
 )
 
-"""
-graph= workflow.compile()
-
-initial_state = {
-    "messages": [
-        HumanMessage(
-            content="過去5年の日本のGDPを調査してください。次に調査した結果に基づいて質問に回答してください。",
-            name="Researcher"  # 有効な名前を設定
-        )
-    ],
-    "sender": "initial_sender"
-}
-
-for s in graph.stream(initial_state, debug=True):
-    print(s)
-    print("----")
-"""
-
-
-
 ########################################
 
 
@@ -440,14 +393,58 @@ def call_Others(llm, user_prompt):
     # チェーンの実行
     return chain.invoke({"user_prompt": user_prompt})
 
-# データ取得の関数定義
+################ データ取得の関数定義 ##########################
 
-def data_get():
-    documents_url = ["https://cosmosdbdatagetter.azurewebsites.net/data?data_range=2024-9-28 to 2025-1-1",]
+urls1 = ["https://cosmosdbdatagetter.azurewebsites.net/data",]
+urls2 = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=ページ関連情報",]
+urls3 = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=トラフィックソース関連情報",]
+urls4 = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=ユーザー行動関連情報",]
+urls5 = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=サイト内検索関連情報",]
+urls6 = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=デバイスおよびユーザ属性関連情報",]
+urls7 = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=時間帯関連情報",]
 
 
-    loader = langchain_community.document_loaders.SeleniumURLLoader(urls=documents_url)  # 修正
+def data_get(urls,prompt):
+
+    llm = ChatOpenAI(model_name="gpt-4o-mini",
+                    temperature=0,
+                    openai_api_key=openai_api_key
+                    )
+    url = "https://cosmosdbdatagetter.azurewebsites.net/data?group=ページ関連情報"
+    print(url)
+    #url = "https://～.azurewebsites.net/data?group=ページ関連情報"
+    response = requests.get(url)
+    print(response.text)
+
+    docs = [Document(page_content=response.text)]
+    loader = UnstructuredURLLoader(urls=urls,mode="elements")
+    doc_data = loader.load()
+    if not doc_data:
+        return "URLからデータが取得できませんでした"
+
+    text_splitter = CharacterTextSplitter(
+        separator = "\n",
+        chunk_size = 300,
+        chunk_overlap = 0,
+        length_function = len,
+    )
+
+    index = VectorstoreIndexCreator(
+        vectorstore_cls=Chroma,
+        embedding=OpenAIEmbeddings(),
+        text_splitter=text_splitter,
+    ).from_loaders([loader])
+    
+    query = prompt
+    answer = index.query(query,llm)
+    print(answer)
+
+
+"""
+def data_get(urls,prompt):
+    loader = langchain_community.document_loaders.SeleniumURLLoader(urls=urls)  # 修正
     documents = loader.load() 
+
 
     # 読込した内容を分割する
     text_splitter = langchain.text_splitter.RecursiveCharacterTextSplitter(
@@ -456,19 +453,18 @@ def data_get():
     )
     docs = text_splitter.split_documents(documents)
 
-    # OpenAIEmbeddings の初期化
-    embedding = OpenAIEmbeddings()
+    # 埋め込みモデルを指定
+    embeddings = OpenAIEmbeddings()
 
-    def get_embedding(text, model):
-        text = text.replace("\n", " ")
-        res = openai.embeddings.create(input = [text], model=model).data[0].embedding
-        return res
+    # Chromaを初期化
+    vectorstore = Chroma(embedding_function=embeddings, persist_directory="./ChromaDB" )
+
+    # クエリを実行
+    results = vectorstore.similarity_search(prompt, k=5)
     
-    vectorstore = Chroma.from_documents(
-        documents=docs,
-        embedding=embedding
-    )
-
+    return results
+"""
+####################################################
 
 ###############
 # Stateの宣言 #
@@ -490,7 +486,7 @@ def node_Start(state: State, config: RunnableConfig):
 def node_Analyze(state: State, config: RunnableConfig):
     prompt = state["message"]
     response = select_tool(llm, prompt)
-    return {"message_type": response["message_type"], "messages": state["message"]}
+    return {"message_type": response.content, "messages": prompt}
 
 # プロンプトの評価ノード
 def node_Review(state: State, config: RunnableConfig):
@@ -505,16 +501,62 @@ def node_Others(state: State, config: RunnableConfig):
     return {"message": response.content}
 
 # 具体的な質問回答ノード
-def node_SpecificAnalyze(state: State, config: RunnableConfig):
-    prompt = state["message"]
-    response = specific_analyze(llm, prompt)
-    return {"message": response.content}
+#def node_SpecificAnalyze(state: State, config: RunnableConfig):
+#    prompt = state["message"]
+#    response = specific_analyze(llm, prompt)
+#    return {"message": response.content}
 
 # 全データ取得ノード
-def node_DataGet(state: State, config: RunnableConfig):
+def node_DataGet(state: State, config: RunnableConfig, url:list=urls1):
     prompt = state["message"]
-    data_get()
+    data_get(url)
     return {"data": f"データ取得完了: {data_get.content}","message":prompt}
+
+# ページ関連情報取得ノード
+def node_DataGet_page(state: State, config: RunnableConfig, url:list=urls2):
+    if url is None:
+        url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=ページ関連情報"]
+
+    prompt = state["message"]
+    print(prompt)
+    result_data = data_get(url,prompt)
+    print(result_data)
+    return {"message":result_data}
+
+
+
+# トラフィックソース関連情報取得ノード
+def node_DataGet_traffic(state: State, config: RunnableConfig,url:list=urls3):
+    prompt = state["message"]
+    index = data_get(url)
+    return {"message":index.query(prompt)}
+
+# ユーザー関連情報取得ノード
+def node_DataGet_user(state: State, config: RunnableConfig,url:list=urls4):
+    prompt = state["message"]
+    index = data_get(url)
+    return {"message":index.query(prompt)}
+
+# サイト内検索情報取得ノード
+def node_DataGet_search(state: State, config: RunnableConfig,url:list=urls5):
+    prompt = state["message"]
+    index = data_get(url, prompt)
+    return {"message":index.query(prompt)}
+
+# デバイスおよびユーザー属性情報取得ノード
+def node_DataGet_device(state: State, config: RunnableConfig,url:list=urls6):
+    prompt = state["message"]
+    index = data_get(url, prompt)
+    return {"message":index.query(prompt)}
+
+# 時間帯関連情報取得ノード
+def node_DataGet_time(state: State, config: RunnableConfig,url:list=urls7):
+    prompt = state["message"]
+    index = data_get(url, prompt)
+    return {"message":index.query(prompt)}
+
+
+
 
 #############
 # LangGraph #
@@ -528,10 +570,11 @@ graph_builder.add_node("node_Start", node_Start)
 graph_builder.add_node("node_Analyze", node_Analyze)
 graph_builder.add_node("node_Review", node_Review)
 graph_builder.add_node("node_Others", node_Others)
-graph_builder.add_node("node_SpecificAnalyze", workflow1.compile())
+#graph_builder.add_node("node_SpecificAnalyze", workflow1.compile())
+graph_builder.add_node("node_DataGet_page", node_DataGet_page)
 graph_builder.add_node("node_agent",workflow2.compile())  
 graph_builder.add_node("node_DataGet", node_DataGet)
-graph_builder.add_node("response", response)
+#graph_builder.add_node("response", response)
 
 
 # Graphの始点を宣言
@@ -559,28 +602,42 @@ graph_builder.add_conditional_edges(
     "node_Analyze",
     lambda state: state["message_type"],
     {
-        "tool01": "node_SpecificAnalyze",
+        "tool01": "node_DataGet_page",
         "tool02": "node_DataGet",
     },
 )
 
 graph_builder.add_edge("node_DataGet", "node_agent")
-graph_builder.add_edge("node_SpecificAnalyze", "response")
+# graph_builder.add_edge("node_SpecificAnalyze", "response")
 
 # Nodeをedgeに追加
 # graph_builder.add_edge("node_Analyze", "node_A1")
 
 # Graphの終点を宣言
-# graph_builder.set_finish_point("node_Analyze")
+#graph_builder.set_finish_point("node_Analyze")
 graph_builder.set_finish_point("node_Review")
 graph_builder.set_finish_point("node_Others")
+graph_builder.set_finish_point("node_DataGet_page")
 
 # Graphをコンパイル
 graph = graph_builder.compile()
 
-# Graphの実行(引数にはStateの初期値を渡す)
-#graph.invoke({'message': '「こんにちは」'}, debug=True)
+"""
+# 初期状態に必要な引数を追加
+initial_state = {
+    "message": "こんにちは、ブログ、顕在ワードの推移はどうなっていますか？"
+}
 
+# Graphの実行(引数にはStateの初期値を渡す)
+graph.invoke(initial_state, debug=True)
+"""
+
+# Graphの実行(引数にはStateの初期値を渡す)
+graph.invoke({'message': 'こんにちは、ブログ、顕在ワードの推移はどうなっていますか？'}, debug=True)
+#graph.invoke({'message': 'こんにちは、ブログの改善案はありますか？'}, debug=True)
+
+
+"""
 initial_state = {
     "messages": [
         HumanMessage(
@@ -593,3 +650,4 @@ initial_state = {
 
 for s in graph.stream(initial_state, debug=True):
     print(s)
+"""
