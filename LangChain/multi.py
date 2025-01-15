@@ -30,14 +30,21 @@ import langchain.embeddings
 import langchain_community.document_loaders
 import langchain.text_splitter
 
+
+openai_api_key = os.getenv("OPENAI_API_KEY")
+
+llm = ChatOpenAI(model_name="gpt-4o-mini", 
+                 temperature=0, 
+                 openai_api_key=openai_api_key
+                 )
+
+
 # CosmosDBデータ取得ツールを定義
 #from FUNC_datagetter import data_get
 #data_get_tool = data_get()
-def data_get():
+def data_get(llm, prompt):
     documents_url = ["https://cosmosdbdatagetter.azurewebsites.net/data?data_range=2024-9-28 to 2025-1-1",]
-
-
-    loader = langchain_community.document_loaders.SeleniumURLLoader(urls=documents_url)  # 修正
+    loader = langchain_community.document_loaders.SeleniumURLLoader(urls=documents_url)  
     documents = loader.load() 
 
     # 読込した内容を分割する
@@ -46,37 +53,17 @@ def data_get():
         chunk_overlap=10,
     )
     docs = text_splitter.split_documents(documents)
-
-    # OpenAIEmbeddings の初期化
-    embedding = OpenAIEmbeddings()
-
-    def get_embedding(text, model):
-        text = text.replace("\n", " ")
-        res = openai.embeddings.create(input = [text], model=model).data[0].embedding
-        return res
-    
-    vectorstore = Chroma.from_documents(
-        documents=docs,
-        embedding=embedding
-    )
-
-
-openai_api_key = os.getenv("OPENAI_API_KEY")
+    return docs
 
 
 def _set_if_undefined(var: str):
     if not os.environ.get(var):
         os.environ[var] = getpass.getpass(f"Please provide your {var}")
 
-
-llm = ChatOpenAI(model_name="gpt-4o-mini", 
-                 temperature=0, 
-                 openai_api_key=openai_api_key
-                 )
-
 class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], operator.add]
     sender: str
+
 
 def router(state):
     # This is the router
@@ -85,7 +72,8 @@ def router(state):
     if "function_call" in last_message.additional_kwargs:
         # The previus agent is invoking a tool
         return "call_tool"
-    if "FINAL ANSWER" in last_message.content:
+    #if "FINAL ANSWER" in last_message.content:
+    if "FINAL ANSWER" in last_message.content or state.get("complete", False):
         # Any agent decided the work is done
         return "end"
     return "continue"
@@ -128,11 +116,31 @@ tool_executor = ToolExecutor(tools)
 ###############
 class State(TypedDict):
     message: str
-
+"""
 def data_node(state: AgentState, config: RunnableConfig):
     prompt = state["message"]
     response = data_get(llm, prompt)
+    # ここに他の処理を追加
     return { "message": response.content }
+"""
+def data_node(state, config):
+    # デバッグログを追加して state の中身を確認
+    print("DEBUG: state before processing:", state)
+    
+    # "message" が存在しない場合の対策
+    if "message" not in state:
+        raise KeyError("Expected 'message' in state but not found.")
+    
+    prompt = state["message"]
+    print("DEBUG: Using prompt:", prompt)
+    data = data_get(llm, prompt)
+    response = data_get(llm, prompt)
+    print("DEBUG: Retrieved documents:", data)
+    # ここに他の処理を追加
+    #return { "message": response }
+    
+    
+
 
 def tool_node(state):
     """
@@ -144,9 +152,15 @@ def tool_node(state):
     # we know the last message involves a function call
     last_message = messages[-1]
     # We construct an ToolInvocation from the function_call
-    tool_input = json.loads(
-        last_message.additional_kwargs["function_call"]["arguments"]
-    )
+    #tool_input = json.loads(
+      #  last_message.additional_kwargs["function_call"]["arguments"]
+    #)
+    try:
+        tool_input = json.loads(
+            last_message.additional_kwargs["function_call"]["arguments"]
+        )
+    except (KeyError, json.JSONDecodeError):
+        tool_input = {}
     # We can pass single-arg inputs by value
     if len(tool_input) == 1 and "__arg1" in tool_input:
         tool_input = next(iter(tool_input.values()))
@@ -155,31 +169,19 @@ def tool_node(state):
         tool=tool_name,
         tool_input=tool_input,
     )
-    # We call the tool_executor and get back a response
     response = tool_executor.invoke(action)
     # We use the response to create a FunctionMessage
     function_message = FunctionMessage(
         content=f"{tool_name} response: {str(response)}", name=action.tool
     )
     # We return a list, because this will get added to the existing list
-    return {"messages": [function_message]}
+    return {"messages": [function_message]}  # Ensure 'messages' is used here
 
 def create_agent(llm, tools, system_message: str):
     """エージェントを作成します。"""
     functions = [convert_to_openai_function(t) for t in tools]
     prompt = ChatPromptTemplate.from_messages(
-        [
-            (
-                "system",
-                " あなたは他のアシスタントと協力して、役に立つ AI アシスタントです。 "
-                " 提供されたツールを使用して、質問の回答に進みます。 "
-                " 完全に答えることができなくても大丈夫です。 "
-                " 別のツールを備えた別のアシスタントが中断したところからサポートします。進歩するためにできることを実行してください。"
-                " あなたまたは他のアシスタントが最終的な回答または成果物を持っている場合は、チームが停止することがわかるように、回答の前に「FINAL ANSWER」を付けます。"
-                " 次のツールにアクセスできます: {tool_names}.\\\\n{system_message}",
-            ),
-            MessagesPlaceholder(variable_name="messages"),
-        ]
+        {"messages": [system_message]}
     )
     prompt = prompt.partial(system_message=system_message)
     prompt = prompt.partial(tool_names=", ".join([tool.name for tool in tools]))
@@ -204,7 +206,14 @@ chart_agent= create_agent(
 )
 
 def agent_node(state, agent, name):
-    result = agent.invoke(state)
+    prompt = state.get("message", "")
+    data = state.get("data", "")
+    combined_prompt = f"{prompt}\n\n---\n\n{data}"
+
+    # エージェントを呼び出して結果を取得
+    result = agent.invoke({"message": combined_prompt})
+    print(f"DEBUG [{name}]: LLM result: {result}")
+
     if isinstance(result, FunctionMessage):
         pass
     else:
@@ -237,17 +246,17 @@ workflow.add_edge("data_node", "Selector")
 workflow.add_conditional_edges(
     "Selector",
     router,
-    {"continue": "Analyzer", "call_tool": "call_tool", "end": END},
+    {"continue": "Chart Generator", "call_tool": "call_tool","end": END},
 )
 workflow.add_conditional_edges(
-    "Analyzer", # <- 起点のエージェント
+    "Chart Generator", # <- 起点のエージェント
     router, # <- ルーターの戻り値を条件とするという定義
-    {"continue": ["Chart Generator", "Selector"], "call_tool": "call_tool", "end": END},# <- 3パターンの定義
+    {"continue": "Analyzer", "call_tool": "call_tool", "end": END},# <- 3パターンの定義
 )
 workflow.add_conditional_edges(
-    "Chart Generator",
+    "Analyzer",
     router,
-    {"continue": "Analyzer", "call_tool": "call_tool", "end": END},
+    {"continue": "Chart Generator", "call_tool": "call_tool", "end": END},
 )
 workflow.add_conditional_edges(
     "call_tool",
@@ -264,5 +273,9 @@ workflow.add_conditional_edges(
 graph= workflow.compile()
 
 # Graphの実行(引数にはStateの初期値を渡す)
-graph.invoke({'message': '「こんにちは」'}, debug=True)
+initial_state = {
+    "message": '{pageTitle}を教えて',
+    "messages": []  # 'messages' キーを追加
+}
+graph.invoke(initial_state, debug=True)
 
