@@ -1,3 +1,17 @@
+# AlterPage
+
+http://localhost:8000/
+
+## 実行
+
+chainlit run app.py
+
+## 環境構築
+
+python3 -m venv venv  
+. venv/bin/activate
+pip install -r requirements.txt
+
 # GA4DataGetter
 
 Google Analytics からのデータを取得する関数  
