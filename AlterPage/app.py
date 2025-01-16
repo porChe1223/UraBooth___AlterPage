@@ -168,6 +168,7 @@ def call_Analyze(llm, user_prompt):
         template = (
             txt_read("resource/rag_data/ga4Info.txt") + 
             txt_read("resource/rag_data/alterbooth.txt") + 
+            #txt_read("resource/sys_prompt/grobal.txt") +  
             "\n\nプロンプト: {user_prompt}"
         )
     )
