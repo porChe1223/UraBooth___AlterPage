@@ -133,7 +133,12 @@ def call_Review(llm, user_prompt):
     # プロンプト評価用のシステムプロンプト
     system_prompt_Evaluate = PromptTemplate(
         input_variables = ["user_prompt"],
-        template = txt_read("resource/sys_prompt/evaluation.txt") + "\n\nプロンプト: {user_prompt}\n\nプロンプトの評価:"
+        template = (
+            txt_read("resource/sys_prompt/evaluation.txt") + 
+            txt_read("resource/sys_prompt/specialist.txt") + 
+            #txt_read("resource/sys_prompt/grobal.txt") +  
+            "\n\nプロンプト: {user_prompt} \n\nプロンプトの評価:"
+        )
     )
     # チェーンの宣言
     chain = (
@@ -336,23 +341,6 @@ graph_builder.add_node("node_DataGet_time", node_DataGet_time)
 graph_builder.add_node("node_Advice", node_Advice)
 graph_builder.add_node("node_End", node_End)
 
-#======================
-# ルーティングの設定
-#======================
-# # 標準回答 or プロンプト評価 or ブログ解析
-# def routing(state: State, config: RunnableConfig):
-#     if 'ブログ' in state['message']:
-#         logging.info(f"[DEBUG] Routing to node_Main")
-#         return "node_Main"
-    
-#     elif 'プロンプト' in state['message'] and '評価' in state['message']:
-#         logging.info(f"[DEBUG] Routing to node_Review")
-#         return "node_Review"
-    
-#     else:
-#         logging.info(f"[DEBUG] Routing to node_Others")
-#         return "node_Others"
-
 #===================
 # ワークフロー作成
 #===================
@@ -364,9 +352,9 @@ graph_builder.add_conditional_edges(
     "node_Start",
     lambda state: state["message_type"],
     {
-        "Do01": "node_Others",
-        "Do02": "node_Review",
-        "Do03": "node_Main",
+        "<回答>": "node_Others",
+        "<プロンプトの評価>": "node_Review",
+        "<ブログ解析>": "node_Main",
     },
 )
 # # 条件分岐のエッジを追加
