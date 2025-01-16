@@ -10,10 +10,8 @@ Carefully and accurately classify the user's input question into one of the foll
     # ページ関連情報
     pageTitle: ユーザーが訪れたページのタイトル（HTML <title> タグから取得）。
     pageLocation: 現在のページの完全なURL（クエリパラメータを含む）。
-    percentScrolled: ページでスクロールされた割合（例: 50%、75%、100%）。
     linkText: ユーザーがクリックしたリンクのテキスト。
     linkUrl: ユーザーがクリックしたリンクのURL。
-    contentGroup: ページまたはコンテンツのグループ。カスタム設定で特定のコンテンツを分類。
 
     ## 分析の例
     ページごとにスクロール率を確認し、重要なコンテンツがユーザーにどの程度届いているかを測定。
@@ -25,10 +23,8 @@ Carefully and accurately classify the user's input question into one of the foll
 "route02" : "トラフィックソース関連情報"について
 
     # トラフィックソース関連情報
-    sourceMedium: トラフィックの発生源とメディアの組み合わせ（例: google / organic）。
     sessionSourceMedium: セッション全体のトラフィック発生源とメディアの組み合わせ。
     landingPage: セッションの最初に訪問したページのURL。
-    dateHourMinute: イベントが発生した日付と時刻（例: 2025-01-13 15:45）。
 
     ## 分析の例
     トラフィックソースごとにコンバージョン率を比較し、特定のキャンペーンやメディアの効果を評価。
@@ -42,11 +38,7 @@ Carefully and accurately classify the user's input question into one of the foll
 
     # ユーザー行動関連情報
     newVsReturning: ユーザーが新規かリピーターかを示す（new または returning）。
-    signedInWithUserId: サインインしたユーザーID（アプリやウェブでサインインしている場合に取得可能）。
-    firstSessionDate: ユーザーが最初に訪問した日付。
-    landingPage: セッションの最初に訪問したページのURL。
-    pageReferrer: 現在のページに来る前に参照したページのURL（リファラー）。
-    percentScrolled: ページでスクロールされた割合（例: 50%、75%、100%）。
+    pageTitle: ユーザーが訪れたページのタイトル（HTML <title> タグから取得）。
 
     ## 分析の例
     新規ユーザーが訪れる主なランディングページと、リピーターの行動パターンの違いを確認。
@@ -61,8 +53,6 @@ Carefully and accurately classify the user's input question into one of the foll
     # サイト内検索関連情報
     searchTerm: ユーザーがウェブサイト内で入力した検索クエリ。
     pageLocation: 現在のページの完全なURL（クエリパラメータを含む）。
-    percentScrolled: ページでスクロールされた割合（例: 50%、75%、100%）。
-    dateHourMinute: イベントが発生した日付と時刻（例: 2025-01-13 15:45）。
 
     ## 分析の例
     検索クエリごとの結果ページへの遷移率を分析し、検索機能の改善点を特定。
@@ -78,9 +68,7 @@ Carefully and accurately classify the user's input question into one of the foll
     # デバイスおよびユーザ属性関連情報
     deviceCategory: 使用されたデバイスのカテゴリ（例: desktop、mobile、tablet）。
     language: ユーザーのブラウザやデバイスの言語設定（例: en-US、ja-JP）。
-    country: ユーザーの推定国（例: Japan、United States）。
     region: ユーザーの推定地域や都道府県（例: Tokyo、California）。
-    city: ユーザーの推定都市（例: New York、Osaka）。
 
     ## 分析の例
     デバイス別のコンバージョン率や、特定地域でのパフォーマンスを比較。
@@ -93,11 +81,7 @@ Carefully and accurately classify the user's input question into one of the foll
 "route06" : "時間帯関連情報"について
 
     # 時間帯関連情報
-    dateHourMinute: イベントが発生した日付と時刻（例: 2025-01-13 15:45）。
-    dayOfWeekName: 曜日（例: Monday、Tuesday）。
-    pageTitle: ユーザーが訪れたページのタイトル（HTML <title> タグから取得）。
-    newVsReturning: ユーザーが新規かリピーターかを示す（new または returning）。
-    sourceMedium: トラフィックの発生源とメディアの組み合わせ（例: google / organic）。
+    dateHour: イベントが発生した日付と時刻（例: 2025011315）。
 
     ## 分析の例
     時間帯や曜日別のトラフィック量とエンゲージメント率を分析して、最適な配信時間を特定。
@@ -116,8 +100,6 @@ Carefully and accurately classify the user's input question into one of the foll
 </example>
 
 <policy>
-If multiple options are conceivable, carefully and recursively deliberate to narrow it down to a single choice. 
 Do not rely solely on word matching; instead, thoroughly consider what kind of analytical results could be derived from the information. 
-If there is any information that remains unclear, explicitly state that it is unknown.
 </policy>
 
