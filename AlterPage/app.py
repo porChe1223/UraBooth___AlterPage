@@ -1,6 +1,6 @@
-from typing import Literal
+from typing import Annotated, Literal
 from typing_extensions import TypedDict
-from langgraph.graph import StateGraph
+from langgraph.graph import StateGraph, END
 from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
@@ -146,8 +146,6 @@ def call_Analyze(llm, user_prompt):
     # チェーンの実行
     return chain.invoke({"user_prompt": user_prompt})
 
-
-
 ###############
 # Stateの宣言 #
 ###############
@@ -205,8 +203,8 @@ urls = [
 # データ取得関数
 def call_Analyze(llm, user_prompt, url_indexes):
     results = []
-
-    for index in url_indexes:
+    max_urls = 2
+    for index in url_indexes[:max_urls]:
         url = urls[index]
         response = requests.get(url)
         results.append(response.text)
@@ -365,6 +363,7 @@ graph_builder.add_edge("node_DataGet_user", "node_Analyze")
 graph_builder.add_edge("node_DataGet_search", "node_Analyze")
 graph_builder.add_edge("node_DataGet_device", "node_Analyze")
 graph_builder.add_edge("node_DataGet_time", "node_Analyze")
+graph_builder.add_edge("node_DataGet", "node_Analyze")
 graph_builder.add_edge("node_Analyze", "node_End")
 
 graph_builder.add_edge("node_Review", "node_End")
