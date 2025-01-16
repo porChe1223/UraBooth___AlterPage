@@ -11,6 +11,7 @@ browser
 campaignId
 campaignName
 character
+city
 cityId
 cm360AccountId
 cm360AccountName
@@ -37,16 +38,20 @@ cohort
 cohortNthDay
 cohortNthMonth
 cohortNthWeek
+contentGroup
 contentId
 contentType
 continent
 continentId
+country
 countryId
 currencyCode
 date
 dateHour
+dateHourMinute
 day
 dayOfWeek
+dayOfWeekName
 defaultChannelGroup
 deviceModel
 dv360AdvertiserId
@@ -70,6 +75,7 @@ dv360SourceMedium
 eventName
 fileExtension
 fileName
+firstSessionDate
 firstUserCampaignId
 firstUserCampaignName
 firstUserCm360AccountId
@@ -328,6 +334,7 @@ sessionSa360SourceMedium
 sessionSource
 sessionSourcePlatform
 shippingTier
+signedInWithUserId
 source
 sourceMedium
 sourcePlatform
