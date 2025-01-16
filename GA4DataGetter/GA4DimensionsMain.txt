@@ -3,4 +3,4 @@
 ['newVsReturning', 'signedInWithUserId', 'firstSessionDate', 'landingPage', 'pageReferrer', 'percentScrolled']
 ['searchTerm', 'pageLocation', 'percentScrolled', 'newVsReturning', 'dateHourMinute']
 ['deviceCategory', 'language', 'country', 'region', 'city']
-['dateHourMinute', 'dayOfWeekName', 'pageTitle', 'newVsReturning', 'sourceMedium']
+['dateHourMinute', 'dayOfWeekName', 'pageTitle', 'newVsReturning']
