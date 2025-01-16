@@ -1,3 +1,5 @@
+active28DayUsers
+active7DayUsers
 addToCarts
 advertiserAdClicks
 advertiserAdCost
@@ -10,6 +12,12 @@ averagePurchaseRevenuePerUser
 averageRevenuePerUser
 cartToViewRate
 checkouts
+cohortActiveUsers
+cohortTotalUsers
+crashAffectedUsers
+crashFreeUsersRate
+dauPerMau
+dauPerWau
 ecommercePurchases
 firstTimePurchaserRate
 firstTimePurchasers
@@ -48,7 +56,9 @@ screenPageViews
 refundAmount
 shippingAmount
 taxAmount
+totalAdRevenue
 totalPurchasers
 totalRevenue
 transactions
 transactionsPerPurchaser
+wauPerMau

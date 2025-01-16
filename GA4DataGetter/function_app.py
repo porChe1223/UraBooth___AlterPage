@@ -40,57 +40,6 @@ def get_report_parallel(
     order_by: str = None,
     limit: int = 1000,
 ):
-    # def get_report(dimension_list, metric):
-    #     try:
-    #         dim = [Dimension(name=dims) for dims in dimension_list]
-    #         met = [Metric(name=metric)]
-
-    #         # レポートリクエストの作成
-    #         request = RunReportRequest(
-    #             property=f'properties/{PROPERTY_ID}',
-    #             date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
-    #             dimensions=dim,
-    #             metrics=met,
-    #             order_bys=None,
-    #             limit=limit,
-    #         )
-
-    #         # レポートの実行
-    #         response = client.run_report(request)
-    #         logging.info(f'[SUCCESS]: Dimension: {dimension}, Metric: {metric}')
-    #         return response
-        
-    #     except Exception as e:
-    #         logging.error(f'[FAIL]: Dimension: {dimension}, Metric: {metric}')
-    #         logging.error(e)
-    #         return None
-
-    # # 並列処理
-    # try:
-    #     # GA4クライアントの初期化
-    #     client = BetaAnalyticsDataClient.from_service_account_file(KEY_FILE_LOCATION)
-
-    #     # レスポンスリストの初期化
-    #     responses = []
-
-    #     # 文字列をリストに変換
-    #     dimension_list = eval(dimension)
-
-    #     # 並列処理
-    #     with concurrent.futures.ThreadPoolExecutor() as executor:
-    #         futures = [executor.submit(get_report, dimension_list, metric) for metric in metrics]
-    #         for future in concurrent.futures.as_completed(futures):
-    #             response = future.result()
-    #             if response:
-    #                 responses.append(response)
-        
-    #     return responses
-
-    # except Exception as e:
-    #     logging.error(f'ERROR: GA4レポート取得中にエラーが発生しました')
-    #     logging.error(e)
-    #     raise
-
     #======================================
     # 並列処理
     # - メトリクスをまとめて取得
@@ -106,23 +55,27 @@ def get_report_parallel(
         dimension_list = eval(dimension)
         # ディメンショングループからまとめて作成
         dim = [Dimension(name=dims) for dims in dimension_list]
-        # メトリクスをまとめて作成
-        met = [Metric(name=m) for m in metrics]
+        # メトリクスを10個ずつまとめて作成
+        for i in range(0, len(metrics), 7):
+            divided_metrics = metrics[i : i + 7]
+            met = [Metric(name=mets) for mets in divided_metrics]
 
-        # 一括リクエスト
-        request = RunReportRequest(
-            property=f'properties/{PROPERTY_ID}',
-            date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
-            dimensions=dim,
-            metrics=met,
-            limit=limit,
-        )
-        response = client.run_report(request)
+            # 一括リクエスト
+            request = RunReportRequest(
+                property=f'properties/{PROPERTY_ID}',
+                date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+                dimensions=dim,
+                metrics=met,
+                limit=limit,
+            )
+            # レポートの実行
+            response = client.run_report(request)
 
-        # 今まで metric ごとに複数のレスポンスを得ていたので、レスポンスの扱いをどうするか注意
-        # ここでは "responses" にひとまず1件のレスポンスを入れる形にしている
-        responses.append(response)
-        logging.info(f'[SUCCESS]: Dimension: {dimension}, Metric: {met}')
+            # レスポンスをレスポンスリストに追加
+            responses.append(response)
+            logging.info(f'[SUCCESS]: Dimension: {dimension}, Metric: {met}')
+
+        return responses 
 
     except Exception as e:
         logging.error(f'[FAIL]: Dimension: {dimension}, Metric: {met}')
@@ -245,11 +198,6 @@ def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage], outputDocument
 
         # CosmosDBデータリスト初期化
         docs = []
-        # CosmosDBデータリスト追加用のオブジェクト
-        doc = {
-            'id': DATE_RANGE,
-            '日付の範囲': DATE_RANGE
-        }
         # HTTPレスポンスリスト初期化
         http_response = []
 
@@ -282,13 +230,21 @@ def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage], outputDocument
             response_json = format_response_as_json(response)
             logging.info('終了: Json化')
 
-            # CosmosDBデータリストに追加
-            doc[category] = response_json
+            # レポート情報を格納する辞書の初期化
+            doc = {
+                'id': f'{DATE_RANGE}-{category}',
+                '日付の範囲': DATE_RANGE,
+                category: json.loads(response_json) 
+            }
 
-        # CosmosDB用のデータリストに追加
+            # Cosmos DB 用にドキュメントに変換して格納
+            docs.append(func.Document.from_dict(doc))
+
+            # HTTP レスポンスにも追加（ここでは一旦 doc をそのまま突っ込む）
+            http_response.append(doc)
+
+        # CosmosDB用に格納
         logging.info('[START]: CosmosDBに出力')
-        docs.append(func.Document.from_dict(doc))
-        # Cosmos DB に出力
         outputDocument.set(docs)
         # 処理完了メッセージをFunctionsのキューに追加
         msg.set('Report processed')

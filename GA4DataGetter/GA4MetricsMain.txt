@@ -1,16 +1,8 @@
 active1DayUsers
-active28DayUsers
-active7DayUsers
 activeUsers
 adUnitExposure
 averageSessionDuration
 bounceRate
-cohortActiveUsers
-cohortTotalUsers
-crashAffectedUsers
-crashFreeUsersRate
-dauPerMau
-dauPerWau
 engagedSessions
 engagementRate
 eventCount
@@ -25,8 +17,6 @@ scrolledUsers
 sessionKeyEventRate
 sessions
 sessionsPerUser
-totalAdRevenue
 totalUsers
 userEngagementDuration
 userKeyEventRate
-wauPerMau
