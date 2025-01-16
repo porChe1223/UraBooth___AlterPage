@@ -97,7 +97,7 @@ def select_What_to_do(llm, user_prompt):
     # プロンプトの作成
     classification_prompt = PromptTemplate(
         input_variables = ["user_prompt"],
-        template = txt_read("resource/sys_prompt/what_to_do.txt") + "\n\nプロンプト: {user_prompt}"
+        template = txt_read("resource/sys_prompt/start.txt") + "\n\nプロンプト: {user_prompt}"
     )
     # チェーンの宣言
     chain = (
@@ -134,8 +134,7 @@ def call_Review(llm, user_prompt):
     system_prompt_Evaluate = PromptTemplate(
         input_variables = ["user_prompt"],
         template = (
-            txt_read("resource/sys_prompt/evaluation.txt") + 
-            txt_read("resource/sys_prompt/specialist.txt") + 
+            txt_read("resource/sys_prompt/evaluation.txt") +  
             #txt_read("resource/sys_prompt/grobal.txt") +  
             "\n\nプロンプト: {user_prompt} \n\nプロンプトの評価:"
         )
@@ -185,13 +184,15 @@ def classify_tool(llm, user_prompt):
 def call_Analyze(llm, user_prompt, url_index=0):
     llm = llm
     url = urls[url_index]
-    #url = "https://～.azurewebsites.net/data?group=ページ関連情報"
     response = requests.get(url)
     print(response.text)
 
     system_prompt_Evaluate = PromptTemplate(
         input_variables = ["user_prompt"],
-        template =  response.text,
+        template = (
+             response.text + 
+             txt_read("resource/rag_data/ga4Info.txt")
+        ),
         template_format="jinja2"
         )
     # チェーンの宣言
@@ -202,6 +203,24 @@ def call_Analyze(llm, user_prompt, url_index=0):
     # チェーンの実行
     return chain.invoke({"user_prompt": user_prompt})
 
+# データ分析結果を要約する関数の定義
+def call_Summarize(llm, massage):
+    # データ取得のシステムプロンプト
+    system_prompt_Summarize = PromptTemplate(
+        input_variables = ["message"],
+        template = (
+            txt_read("resource/sys_prompt/summary.txt") + 
+            "\n\nプロンプト: {user_prompt}"
+        )
+    )
+    # チェーンの宣言
+    chain = (
+        system_prompt_Summarize
+        | llm
+    )
+    # チェーンの実行
+    return chain.invoke({"message": massage })
+
 # 分析されたデータからの改善策提案の関数
 def call_Advice(llm, user_prompt):
     # データ取得のシステムプロンプト
@@ -209,8 +228,7 @@ def call_Advice(llm, user_prompt):
         input_variables = ["user_prompt"],
         template = (
             txt_read("resource/rag_data/ga4Info.txt") + 
-            txt_read("resource/rag_data/alterbooth.txt") + 
-            #txt_read("resource/sys_prompt/grobal.txt") +  
+            'この分析結果からブログ利用者を増やすにはブログにどんな改良が必要ですか？分析結果からわかる内容のみを使い、具体的な指示をしてください' + 
             "\n\nプロンプト: {user_prompt}"
         )
     )
@@ -308,6 +326,12 @@ def node_DataGet_time(state: State, config: RunnableConfig):
     result_data = call_Analyze(llm2, prompt, url_index=6)
     return {"message":result_data}
 
+# データ分析結果を要約するノード
+def node_Summarize(state: State, config: RunnableConfig):
+    prompt = state["message"]
+    response = call_Summarize(llm4, prompt)
+    return {"message": f"要約: {response.content}"}
+
 # データ結果を解析するノード
 def node_Advice(state: State, config: RunnableConfig):
     prompt = state["message"]
@@ -330,7 +354,7 @@ graph_builder.add_node("node_Start", node_Start)
 graph_builder.add_node("node_Others", node_Others)
 graph_builder.add_node("node_Review", node_Review)
 graph_builder.add_node("node_Main", node_Main)
-graph_builder.add_node("node_DataGet", node_DataGet)
+# 分野別
 graph_builder.add_node("node_Classify", node_Classify)
 graph_builder.add_node("node_DataGet_page", node_DataGet_page)
 graph_builder.add_node("node_DataGet_traffic", node_DataGet_traffic)
@@ -338,6 +362,16 @@ graph_builder.add_node("node_DataGet_user", node_DataGet_user)
 graph_builder.add_node("node_DataGet_search", node_DataGet_search)
 graph_builder.add_node("node_DataGet_device", node_DataGet_device)
 graph_builder.add_node("node_DataGet_time", node_DataGet_time)
+# 全分野
+# graph_builder.add_node("node_DataGet", node_DataGet)
+graph_builder.add_node("node_toData_page", node_DataGet_page)
+graph_builder.add_node("node_toData_traffic", node_DataGet_traffic)
+graph_builder.add_node("node_toData_user", node_DataGet_user)
+graph_builder.add_node("node_toData_search", node_DataGet_search)
+graph_builder.add_node("node_toData_device", node_DataGet_device)
+graph_builder.add_node("node_toData_time", node_DataGet_time)
+
+graph_builder.add_node("node_Summarize", node_Summarize)
 graph_builder.add_node("node_Advice", node_Advice)
 graph_builder.add_node("node_End", node_End)
 
@@ -375,11 +409,9 @@ graph_builder.add_conditional_edges(
     lambda state: state["message_type"],
     {
         "tool01": "node_Classify",
-        "tool02": "node_DataGet",
+        "tool02": "node_toData_page",
     },
 )
-# 全体データ取得　＝＞　解析
-graph_builder.add_edge("node_DataGet", "node_Advice")
 
 # 6つのディメンショングループ
 graph_builder.add_conditional_edges(
@@ -394,7 +426,7 @@ graph_builder.add_conditional_edges(
         "route06": "node_DataGet_time",
     },
 )
-
+# 分野別分析
 # ページ関連情報分析　＝＞　解析
 graph_builder.add_edge("node_DataGet_page", "node_Advice")
 # トラフィックソース関連情報分析　＝＞　解析
@@ -407,6 +439,24 @@ graph_builder.add_edge("node_DataGet_search", "node_Advice")
 graph_builder.add_edge("node_DataGet_device", "node_Advice")
 # 時間帯関連情報分析　＝＞　解析
 graph_builder.add_edge("node_DataGet_time", "node_Advice")
+
+# 全分野分析
+# # 全体データ取得　＝＞　解析
+# graph_builder.add_edge("node_DataGet", "node_Advice")
+# ページ関連情報分析　＝＞　トラフィックソース関連情報分析
+graph_builder.add_edge("node_toData_page", "node_toData_traffic")
+# トラフィックソース関連情報分析　＝＞　ユーザー関連情報分析
+graph_builder.add_edge("node_toData_traffic", "node_toData_user")
+# ユーザー関連情報分析　＝＞　サイト内検索情報分析
+graph_builder.add_edge("node_toData_user", "node_toData_search")
+# サイト内検索情報分析　＝＞　デバイスおよびユーザー属性情報分析
+graph_builder.add_edge("node_toData_search", "node_toData_device")
+# デバイスおよびユーザー属性情報分析　＝＞　時間帯関連情報分析
+graph_builder.add_edge("node_toData_device", "node_toData_time")
+# 時間帯関連情報分析　＝＞　要約
+graph_builder.add_edge("node_toData_time", "node_Summarize")
+# 要約　＝＞　解析
+graph_builder.add_edge("node_Summarize", "node_Advice")
 
 # 解析　＝＞　終点
 graph_builder.add_edge("node_Advice", "node_End")
