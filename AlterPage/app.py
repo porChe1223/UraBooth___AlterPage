@@ -74,13 +74,8 @@ def txt_read(txtfile):
     f.close()
     return data
 
-""""""""""""""""""""
-" ブログの改善提案   "
-" ここに関数を入れる "
-""""""""""""""""""""
 
 #AIエージェントがユーザの質問を分類し、適切なワークフロー（tool01かtool2）を呼び出すための関数の定義
-
 def select_tool(llm, user_prompt):
     llm = llm
     # プロンプトの作成
