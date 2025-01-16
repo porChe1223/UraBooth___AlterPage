@@ -134,7 +134,7 @@ def call_Analyze(llm, user_prompt):
         template = (
             txt_read("resource/rag_data/ga4Info.txt") + 
             txt_read("resource/rag_data/alterbooth.txt") + 
-            #txt_read("resource/sys_prompt/grobal.txt") +  
+            txt_read("resource/sys_prompt/grobal.txt") +  
             "\n\nプロンプト: {user_prompt}"
         )
     )
@@ -206,9 +206,10 @@ def call_Analyze(llm, user_prompt, url_indexes):
     max_urls = 2
     for index in url_indexes[:max_urls]:
         url = urls[index]
+        print(url)
         response = requests.get(url)
-        results.append(response.text)
-
+        results.append(url)
+        print(results, "あああああああああああああああああ")
     combined_data = "\n".join(results)  # 各レスポンスを結合
 
     system_prompt_Evaluate = PromptTemplate(
@@ -252,7 +253,7 @@ def node_DataGet_user(state: State, config: RunnableConfig):
 # サイト内検索情報取得ノード
 def node_DataGet_search(state: State, config: RunnableConfig):
     prompt = state["message"]
-    result_data = call_Analyze(llm, prompt, url_indexes=[0,4])
+    result_data = call_Analyze(llm, prompt, url_indexes=[4])
     return {"message":result_data}
 
 # デバイスおよびユーザー属性情報取得ノード
