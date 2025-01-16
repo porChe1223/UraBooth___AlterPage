@@ -40,57 +40,6 @@ def get_report_parallel(
     order_by: str = None,
     limit: int = 1000,
 ):
-    # def get_report(dimension_list, metric):
-    #     try:
-    #         dim = [Dimension(name=dims) for dims in dimension_list]
-    #         met = [Metric(name=metric)]
-
-    #         # レポートリクエストの作成
-    #         request = RunReportRequest(
-    #             property=f'properties/{PROPERTY_ID}',
-    #             date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
-    #             dimensions=dim,
-    #             metrics=met,
-    #             order_bys=None,
-    #             limit=limit,
-    #         )
-
-    #         # レポートの実行
-    #         response = client.run_report(request)
-    #         logging.info(f'[SUCCESS]: Dimension: {dimension}, Metric: {metric}')
-    #         return response
-        
-    #     except Exception as e:
-    #         logging.error(f'[FAIL]: Dimension: {dimension}, Metric: {metric}')
-    #         logging.error(e)
-    #         return None
-
-    # # 並列処理
-    # try:
-    #     # GA4クライアントの初期化
-    #     client = BetaAnalyticsDataClient.from_service_account_file(KEY_FILE_LOCATION)
-
-    #     # レスポンスリストの初期化
-    #     responses = []
-
-    #     # 文字列をリストに変換
-    #     dimension_list = eval(dimension)
-
-    #     # 並列処理
-    #     with concurrent.futures.ThreadPoolExecutor() as executor:
-    #         futures = [executor.submit(get_report, dimension_list, metric) for metric in metrics]
-    #         for future in concurrent.futures.as_completed(futures):
-    #             response = future.result()
-    #             if response:
-    #                 responses.append(response)
-        
-    #     return responses
-
-    # except Exception as e:
-    #     logging.error(f'ERROR: GA4レポート取得中にエラーが発生しました')
-    #     logging.error(e)
-    #     raise
-
     #======================================
     # 並列処理
     # - メトリクスをまとめて取得
