@@ -203,15 +203,15 @@ urls = [
     ]
 
 # データ取得関数
-def call_Analyze(llm, user_prompt, url_index=0):
-    llm = ChatOpenAI(model_name="gpt-4o-mini",
-                    temperature=0,
-                    openai_api_key=openai_api_key
-                    )
-    url = urls[url_index]
-    #url = "https://～.azurewebsites.net/data?group=ページ関連情報"
-    response = requests.get(url)
-    print(response.text)
+def call_Analyze(llm, user_prompt, url_indexes):
+    results = []
+
+    for index in url_indexes:
+        url = urls[index]
+        response = requests.get(url)
+        results.append(response.text)
+
+    combined_data = "\n".join(results)  # 各レスポンスを結合
 
     system_prompt_Evaluate = PromptTemplate(
         input_variables = ["user_prompt"],
@@ -230,53 +230,43 @@ def call_Analyze(llm, user_prompt, url_index=0):
 # 全データ取得ノード
 def node_DataGet(state: State, config: RunnableConfig):
     prompt = state["message"]
-    result_data = call_Analyze(llm,prompt,url_index=0)
+    result_data = call_Analyze(llm,prompt,url_indexes=[0])
     return {"message":result_data}
 
 # ページ関連情報取得ノード
 def node_DataGet_page(state: State, config: RunnableConfig):
     prompt = state["message"]
-    #print(prompt)
-    result_data = call_Analyze(llm, prompt, url_index=1)
-    #print(result_data)
+    result_data = call_Analyze(llm, prompt, url_indexes=[0,1])
     return {"message":result_data}
 
 # トラフィックソース関連情報取得ノード
 def node_DataGet_traffic(state: State, config: RunnableConfig):
     prompt = state["message"]
-    result_data = call_Analyze(llm, prompt, url_index=2)
+    result_data = call_Analyze(llm, prompt, url_indexes=[0,2])
     return {"message":result_data}
 
 # ユーザー関連情報取得ノード
 def node_DataGet_user(state: State, config: RunnableConfig):
-    #if url is None:
-    #    url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=ユーザー関連情報"]
     prompt = state["message"]
-    result_data = call_Analyze(llm, prompt, url_index=3)
+    result_data = call_Analyze(llm, prompt, url_indexes=[0,3])
     return {"message":result_data}
 
 # サイト内検索情報取得ノード
 def node_DataGet_search(state: State, config: RunnableConfig):
-    #if url is None:
-    #    url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=サイト内検索関連情報"]
     prompt = state["message"]
-    result_data = call_Analyze(llm, prompt, url_index=4)
+    result_data = call_Analyze(llm, prompt, url_indexes=[0,4])
     return {"message":result_data}
 
 # デバイスおよびユーザー属性情報取得ノード
 def node_DataGet_device(state: State, config: RunnableConfig):
-    #if url is None:
-    #    url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=デバイスおよびユーザー属性関連情報"]
     prompt = state["message"]
-    result_data = call_Analyze(llm, prompt, url_index=5)
+    result_data = call_Analyze(llm, prompt, url_indexes=[0,5])
     return {"message":result_data}
 
 # 時間帯関連情報取得ノード
 def node_DataGet_time(state: State, config: RunnableConfig):
-    #if url is None:
-    #    url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=時間帯関連情報"]
     prompt = state["message"]
-    result_data = call_Analyze(llm, prompt, url_index=6)
+    result_data = call_Analyze(llm, prompt, url_indexes=[0,6])
     return {"message":result_data}
 
 ####################################################
