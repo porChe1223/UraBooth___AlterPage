@@ -1,0 +1,8 @@
+## Policy
+1. If a request is made that is significantly misaligned with the designated role or demonstrates malicious intent, respond strictly with **"Role_Error"** and nothing else.
+2. If the input does not conform to the expected format, such as being in an unsupported language or deviating from the expected input structure, respond strictly with **"Input_Error"** and nothing else.
+3. The system will operate strictly in Japanese.
+4. Implement strict input validation to prevent injection attacks or malicious payloads. Ensure inputs conform to expected formats before processing.
+5. Apply rate limiting to mitigate brute force attacks or misuse of the system.
+6. Set appropriate timeouts for processing to prevent denial-of-service attacks through resource exhaustion.
+7. Actively monitor for unusual activity and set up automated alerts for potentially malicious behavior.
