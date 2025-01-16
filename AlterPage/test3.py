@@ -30,8 +30,6 @@ openai_api_key2 = os.getenv("OPENAI_API_KEY2")
 openai_api_key3 = os.getenv("OPENAI_API_KEY3")
 openai_api_key4 = os.getenv("OPENAI_API_KEY4")
 
-openai_api_key9 = os.getenv("OPENAI_API_KEY9")
-
 
 
 ################
@@ -56,11 +54,6 @@ llm3 = ChatOpenAI(model_name="gpt-4o",
 llm4 = ChatOpenAI(model_name="gpt-4o-mini",
                 temperature=0,
                 openai_api_key=openai_api_key4
-                )
-
-llm9 = ChatOpenAI(model_name="gpt-4",
-                temperature=0,
-                openai_api_key=openai_api_key9
                 )
 
 # プロンプトに対してそのまま返答
@@ -198,14 +191,14 @@ class State(TypedDict):
 # 開始ノード
 def node_Start(state: State, config: RunnableConfig):
     prompt = state["message"]
-    response = start_tool(llm9,prompt)
+    response = start_tool(llm,prompt)
     # 入力されたメッセージをそのまま次に渡す
     return {"message_type": response.content, "messages": prompt}
 
 # ブログの改善ノード
 def node_Main(state: State, config: RunnableConfig):
     prompt = state["message"]
-    response = select_tool(llm9, prompt)
+    response = select_tool(llm, prompt)
     return {"message_type": response.content, "messages": prompt}
 
 # プロンプトの評価ノード
@@ -223,7 +216,7 @@ def node_Others(state: State, config: RunnableConfig):
 # ユーザの質問を細かく分類するノード
 def node_Classify(state: State, config: RunnableConfig):
     prompt = state["message"]
-    response = classify_tool(llm3, prompt)
+    response = classify_tool(llm4, prompt)
     return {"message_type": response.content, "messages": prompt}
 
 
@@ -242,6 +235,7 @@ urls = [
 
 # データ取得関数
 def call_Analyze(llm, user_prompt, url_index=0):
+    time.sleep(60)
     llm = llm
     url = urls[url_index]
     response = requests.get(url)

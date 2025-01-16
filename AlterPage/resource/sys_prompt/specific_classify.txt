@@ -100,8 +100,6 @@ Carefully and accurately classify the user's input question into one of the foll
 </example>
 
 <policy>
-If multiple options are conceivable, carefully and recursively deliberate to narrow it down to a single choice. 
 Do not rely solely on word matching; instead, thoroughly consider what kind of analytical results could be derived from the information. 
-If there is any information that remains unclear, explicitly state that it is unknown.
 </policy>
 

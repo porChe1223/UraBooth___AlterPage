@@ -40,18 +40,21 @@ llm = ChatOpenAI(model_name="gpt-4o-mini",
                  temperature=0,
                  openai_api_key=openai_api_key
                  )
+
 llm2 = ChatOpenAI(model_name="gpt-4o-mini",
-                    temperature=0,
-                    openai_api_key=openai_api_key2
-                    )
+                temperature=0,
+                openai_api_key=openai_api_key2
+                )
+
 llm3 = ChatOpenAI(model_name="gpt-4o-mini",
-                    temperature=0,
-                    openai_api_key=openai_api_key3
-                    )
+                temperature=0,
+                openai_api_key=openai_api_key3
+                )
+
 llm4 = ChatOpenAI(model_name="gpt-4o-mini",
-                    temperature=0,
-                    openai_api_key=openai_api_key4
-                    )
+                temperature=0,
+                openai_api_key=openai_api_key4
+                )
 
 # プロンプトに対してそのまま返答
 def call_llm(llm, prompt):
@@ -152,8 +155,6 @@ def call_Advice(llm, user_prompt):
         input_variables = ["user_prompt"],
         template = (
             txt_read("resource/rag_data/ga4Info.txt") + 
-            txt_read("resource/rag_data/alterbooth.txt") + 
-            #txt_read("resource/sys_prompt/grobal.txt") +  
             "\n\nプロンプト: {user_prompt}"
         )
     )
@@ -185,8 +186,6 @@ def node_Start(state: State, config: RunnableConfig):
 def node_Main(state: State, config: RunnableConfig):
     prompt = state["message"]
     response = select_tool(llm, prompt)
-    #logging.info(f"[DEBUG] response: {response}")
-    #logging.info(f"[DEBUG] response.content: {response.content}")
     return {"message_type": response.content, "messages": prompt}
 
 # プロンプトの評価ノード
@@ -225,9 +224,7 @@ urls = [
 def call_Analyze(llm, user_prompt, url_index=0):
     llm = llm
     url = urls[url_index]
-    #url = "https://～.azurewebsites.net/data?group=ページ関連情報"
     response = requests.get(url)
-    print(response.text)
 
     system_prompt_Evaluate = PromptTemplate(
         input_variables = ["user_prompt"],
@@ -242,19 +239,29 @@ def call_Analyze(llm, user_prompt, url_index=0):
     # チェーンの実行
     return chain.invoke({"user_prompt": user_prompt})
 
+# データ分析結果を要約する関数の定義
+def call_Summarize(llm, massage):
+    # データ取得のシステムプロンプト
+    system_prompt_Summarize = PromptTemplate(
+        input_variables = ["message"],
+        template = (
+            txt_read("resource/sys_prompt/summary.txt") + 
+            "\n\nプロンプト: {user_prompt}"
+        )
+    )
+    # チェーンの宣言
+    chain = (
+        system_prompt_Summarize
+        | llm
+    )
+    # チェーンの実行
+    return chain.invoke({"message": massage })
 
-# 全データ取得ノード
-def node_DataGet(state: State, config: RunnableConfig):
-    prompt = state["message"]
-    result_data = call_Analyze(llm2,prompt,url_index=0)
-    return {"message":result_data}
 
 # ページ関連情報取得ノード
 def node_DataGet_page(state: State, config: RunnableConfig):
     prompt = state["message"]
-    #print(prompt)
     result_data = call_Analyze(llm2, prompt, url_index=1)
-    #print(result_data)
     return {"message":result_data}
 
 # トラフィックソース関連情報取得ノード
@@ -265,42 +272,40 @@ def node_DataGet_traffic(state: State, config: RunnableConfig):
 
 # ユーザー関連情報取得ノード
 def node_DataGet_user(state: State, config: RunnableConfig):
-    #if url is None:
-    #    url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=ユーザー関連情報"]
     prompt = state["message"]
     result_data = call_Analyze(llm2, prompt, url_index=3)
     return {"message":result_data}
 
 # サイト内検索情報取得ノード
 def node_DataGet_search(state: State, config: RunnableConfig):
-    #if url is None:
-    #    url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=サイト内検索関連情報"]
     prompt = state["message"]
     result_data = call_Analyze(llm2, prompt, url_index=4)
     return {"message":result_data}
 
 # デバイスおよびユーザー属性情報取得ノード
 def node_DataGet_device(state: State, config: RunnableConfig):
-    #if url is None:
-    #    url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=デバイスおよびユーザー属性関連情報"]
     prompt = state["message"]
     result_data = call_Analyze(llm2, prompt, url_index=5)
     return {"message":result_data}
 
 # 時間帯関連情報取得ノード
 def node_DataGet_time(state: State, config: RunnableConfig):
-    #if url is None:
-    #    url = ["https://cosmosdbdatagetter.azurewebsites.net/data?group=時間帯関連情報"]
     prompt = state["message"]
     result_data = call_Analyze(llm2, prompt, url_index=6)
     return {"message":result_data}
+
+# データ分析結果を要約するノード
+def node_Summarize(state: State, config: RunnableConfig):
+    prompt = state["message"]
+    response = call_Summarize(llm3, prompt)
+    return {"message": f"要約: {response.content}"}
 
 ####################################################
 
 # データ結果を解析するノード
 def node_Advice(state: State, config: RunnableConfig):
     prompt = state["message"]
-    response = call_Advice(llm, prompt)
+    response = call_Advice(llm4, prompt)
     return {"message": f"解析結果: {response.content}"}
 
 # プロンプトの評価ノード
@@ -328,15 +333,24 @@ graph_builder.add_node("node_Main", node_Main)
 graph_builder.add_node("node_Review", node_Review)
 graph_builder.add_node("node_Others", node_Others)
 graph_builder.add_node("node_Classify", node_Classify)
-graph_builder.add_node("node_DataGet", node_DataGet)
 graph_builder.add_node("node_DataGet_page", node_DataGet_page)
 graph_builder.add_node("node_DataGet_traffic", node_DataGet_traffic)
 graph_builder.add_node("node_DataGet_user", node_DataGet_user)
 graph_builder.add_node("node_DataGet_search", node_DataGet_search)
 graph_builder.add_node("node_DataGet_device", node_DataGet_device)
 graph_builder.add_node("node_DataGet_time", node_DataGet_time)
+graph_builder.add_node("node_Summarize", node_Summarize)
 graph_builder.add_node("node_Advice", node_Advice)
 graph_builder.add_node("node_End", node_End)
+
+#全てのデータを取得する場合のノード
+graph_builder.add_node("node_toData_page", node_DataGet_page)
+graph_builder.add_node("node_toData_traffic", node_DataGet_traffic)
+graph_builder.add_node("node_toData_user", node_DataGet_user)
+graph_builder.add_node("node_toData_search", node_DataGet_search)
+graph_builder.add_node("node_toData_device", node_DataGet_device)
+graph_builder.add_node("node_toData_time", node_DataGet_time)
+
 
 # Graphの始点を宣言
 graph_builder.set_entry_point("node_Start")
@@ -367,11 +381,9 @@ graph_builder.add_conditional_edges(
     lambda state: state["message_type"],
     {
         "tool01": "node_Classify",
-        "tool02": "node_DataGet",
+        "tool02": "node_toData_page",
     },
 )
-
-
 
 graph_builder.add_conditional_edges(
     "node_Classify",
@@ -388,15 +400,33 @@ graph_builder.add_conditional_edges(
 
 
 # Nodeをedgeに追加
-graph_builder.add_edge("node_DataGet", "node_Advice")
+
+# 全てのデータから分析する場合
+graph_builder.add_edge("node_toData_page", "node_toData_traffic")
+graph_builder.add_edge("node_toData_traffic", "node_toData_user")
+graph_builder.add_edge("node_toData_user", "node_toData_search")
+graph_builder.add_edge("node_toData_search", "node_toData_device")
+graph_builder.add_edge("node_toData_device", "node_toData_time")
+graph_builder.add_edge("node_toData_time", "node_Summarize")
+#graph_builder.add_edge("node_Summarize", "node_Advice")
+
+"""
 graph_builder.add_edge("node_DataGet_page", "node_Advice")
 graph_builder.add_edge("node_DataGet_traffic", "node_Advice")
 graph_builder.add_edge("node_DataGet_user", "node_Advice")
 graph_builder.add_edge("node_DataGet_search", "node_Advice")
 graph_builder.add_edge("node_DataGet_device", "node_Advice")
 graph_builder.add_edge("node_DataGet_time", "node_Advice")
-graph_builder.add_edge("node_Advice", "node_End")
 
+graph_builder.add_edge("node_Advice", "node_End")
+"""
+graph_builder.add_edge("node_DataGet_page", "node_End")
+graph_builder.add_edge("node_DataGet_traffic", "node_End")
+graph_builder.add_edge("node_DataGet_user", "node_End")
+graph_builder.add_edge("node_DataGet_search", "node_End")
+graph_builder.add_edge("node_DataGet_device", "node_End")
+graph_builder.add_edge("node_DataGet_time", "node_End")
+graph_builder.add_edge("node_Summarize", "node_End")
 graph_builder.add_edge("node_Review", "node_End")
 graph_builder.add_edge("node_Others", "node_End")
 
