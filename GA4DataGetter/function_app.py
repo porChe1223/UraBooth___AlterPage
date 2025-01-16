@@ -107,8 +107,8 @@ def get_report_parallel(
         # ディメンショングループからまとめて作成
         dim = [Dimension(name=dims) for dims in dimension_list]
         # メトリクスを10個ずつまとめて作成
-        for i in range(0, len(metrics), 10):
-            divided_metrics = metrics[i : i + 10]
+        for i in range(0, len(metrics), 7):
+            divided_metrics = metrics[i : i + 7]
             met = [Metric(name=mets) for mets in divided_metrics]
 
             # 一括リクエスト
@@ -249,11 +249,6 @@ def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage], outputDocument
 
         # CosmosDBデータリスト初期化
         docs = []
-        # CosmosDBデータリスト追加用のオブジェクト
-        doc = {
-            'id': DATE_RANGE,
-            '日付の範囲': DATE_RANGE
-        }
         # HTTPレスポンスリスト初期化
         http_response = []
 
@@ -286,13 +281,21 @@ def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage], outputDocument
             response_json = format_response_as_json(response)
             logging.info('終了: Json化')
 
-            # CosmosDBデータリストに追加
-            doc[category] = response_json
+            # レポート情報を格納する辞書の初期化
+            doc = {
+                'id': f'{DATE_RANGE}-{category}',
+                '日付の範囲': DATE_RANGE,
+                category: json.loads(response_json) 
+            }
 
-        # CosmosDB用のデータリストに追加
+            # Cosmos DB 用にドキュメントに変換して格納
+            docs.append(func.Document.from_dict(doc))
+
+            # HTTP レスポンスにも追加（ここでは一旦 doc をそのまま突っ込む）
+            http_response.append(doc)
+
+        # CosmosDB用に格納
         logging.info('[START]: CosmosDBに出力')
-        docs.append(func.Document.from_dict(doc))
-        # Cosmos DB に出力
         outputDocument.set(docs)
         # 処理完了メッセージをFunctionsのキューに追加
         msg.set('Report processed')
