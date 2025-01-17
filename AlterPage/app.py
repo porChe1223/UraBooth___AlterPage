@@ -242,9 +242,9 @@ def call_Advice(llm, user_prompt):
     system_prompt_Analyze = PromptTemplate(
         input_variables = ["user_prompt"],
         template = (
-            txt_read("resource/user_prompt/advice.txt") + 
-            'この分析結果からブログ利用者を増やすにはブログにどんな改良が必要ですか？分析結果からわかる内容のみを使い、具体的な指示をしてください' + 
-            "\n\nプロンプト: {user_prompt}"
+            txt_read("resource/user_prompt/answer.txt") #+ 
+
+            #"\n\nプロンプト: {user_prompt}"
         )
     )
     # チェーンの宣言
@@ -461,6 +461,8 @@ graph_builder.add_conditional_edges(
         "analyze_to_suggestion": "node_toSuggestion_search",
     },
 )
+
+"""
 # 分野別分析
 # ページ関連情報分析　＝＞　解析
 graph_builder.add_edge("node_DataGet_page", "node_Advice")
@@ -474,6 +476,7 @@ graph_builder.add_edge("node_DataGet_user", "node_Advice")
 graph_builder.add_edge("node_DataGet_device", "node_Advice")
 # 時間帯関連情報分析　＝＞　解析
 graph_builder.add_edge("node_DataGet_time", "node_Advice")
+"""
 
 # 分野別分析＋提案
 # サイト内検索情報分析　＝＞　提案
@@ -500,6 +503,15 @@ graph_builder.add_edge("node_Summarize", "node_Advice")
 # 解析　＝＞　終点
 graph_builder.add_edge("node_Advice", "node_End")
 graph_builder.add_edge("node_DataGet_search", "node_End")
+
+# 終点
+graph_builder.add_edge("node_DataGet_page", "node_End")
+graph_builder.add_edge("node_DataGet_traffic", "node_End")
+graph_builder.add_edge("node_DataGet_user", "node_End")
+graph_builder.add_edge("node_DataGet_device", "node_End")
+graph_builder.add_edge("node_DataGet_time", "node_End")
+graph_builder.add_edge("node_toSuggestion_search", "node_End")
+
 
 
 # Graphをコンパイル
