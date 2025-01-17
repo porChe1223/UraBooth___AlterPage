@@ -180,6 +180,21 @@ def classify_tool(llm, user_prompt):
     # チェーンの実行
     return chain.invoke({"user_prompt": user_prompt})
 
+# AIエージェントがルートを分析か、分析＋提案かを選択する関数の定義
+def fork_tool(llm, user_prompt):
+    # プロンプトの作成
+    classification_prompt = PromptTemplate(
+        input_variables = ["user_prompt"], #route01~route06が選択される
+        template = txt_read("resource/sys_prompt/fork.txt") + "\n\nプロンプト: {user_prompt}"
+    )
+    # チェーンの宣言
+    chain = (
+        classification_prompt
+        | llm
+    )
+    # チェーンの実行
+    return chain.invoke({"user_prompt": user_prompt})
+
 # 渡されたデータの分析をする関数
 def call_Analyze(llm, user_prompt, url_index=0):
     llm = llm
@@ -227,9 +242,9 @@ def call_Advice(llm, user_prompt):
     system_prompt_Analyze = PromptTemplate(
         input_variables = ["user_prompt"],
         template = (
-            txt_read("resource/rag_data/ga4Info.txt") + 
-            'この分析結果からブログ利用者を増やすにはブログにどんな改良が必要ですか？分析結果からわかる内容のみを使い、具体的な指示をしてください' + 
-            "\n\nプロンプト: {user_prompt}"
+            txt_read("resource/user_prompt/answer.txt") #+ 
+
+            #"\n\nプロンプト: {user_prompt}"
         )
     )
     # チェーンの宣言
@@ -282,6 +297,12 @@ def node_Main(state: State, config: RunnableConfig):
 def node_Classify(state: State, config: RunnableConfig):
     prompt = state["message"]
     response = classify_tool(llm3, prompt)
+    return {"message_type": response.content, "messages": prompt}
+
+# ルートを分析か、分析＋提案かを選択するノード
+def node_Fork(state: State, config: RunnableConfig):
+    prompt = state["message"]
+    response = fork_tool(llm4, prompt)
     return {"message_type": response.content, "messages": prompt}
 
 # 全データ分析ノード
@@ -356,12 +377,16 @@ graph_builder.add_node("node_Review", node_Review)
 graph_builder.add_node("node_Main", node_Main)
 # 分野別
 graph_builder.add_node("node_Classify", node_Classify)
+graph_builder.add_node("node_Fork", node_Fork)
 graph_builder.add_node("node_DataGet_page", node_DataGet_page)
 graph_builder.add_node("node_DataGet_traffic", node_DataGet_traffic)
 graph_builder.add_node("node_DataGet_user", node_DataGet_user)
 graph_builder.add_node("node_DataGet_search", node_DataGet_search)
 graph_builder.add_node("node_DataGet_device", node_DataGet_device)
 graph_builder.add_node("node_DataGet_time", node_DataGet_time)
+#さらに分岐して分析と提案
+graph_builder.add_node("node_toSuggestion_search", node_DataGet_search)
+
 # 全分野
 # graph_builder.add_node("node_DataGet", node_DataGet)
 graph_builder.add_node("node_toData_page", node_DataGet_page)
@@ -421,11 +446,23 @@ graph_builder.add_conditional_edges(
         "route01": "node_DataGet_page",
         "route02": "node_DataGet_traffic",
         "route03": "node_DataGet_user",
-        "route04": "node_DataGet_search",
+        "route04": "node_Fork",
         "route05": "node_DataGet_device",
         "route06": "node_DataGet_time",
     },
 )
+
+# サイト内関連情報を解析 or 解析＋提案
+graph_builder.add_conditional_edges(
+    "node_Fork",
+    lambda state: state["message_type"],
+    {
+        "only_analyze": "node_DataGet_search",
+        "analyze_to_suggestion": "node_toSuggestion_search",
+    },
+)
+
+"""
 # 分野別分析
 # ページ関連情報分析　＝＞　解析
 graph_builder.add_edge("node_DataGet_page", "node_Advice")
@@ -434,11 +471,16 @@ graph_builder.add_edge("node_DataGet_traffic", "node_Advice")
 # ユーザー関連情報分析　＝＞　解析
 graph_builder.add_edge("node_DataGet_user", "node_Advice")
 # サイト内検索情報分析　＝＞　解析
-graph_builder.add_edge("node_DataGet_search", "node_Advice")
+#graph_builder.add_edge("node_DataGet_search", "node_Advice")
 # デバイスおよびユーザー属性情報分析　＝＞　解析
 graph_builder.add_edge("node_DataGet_device", "node_Advice")
 # 時間帯関連情報分析　＝＞　解析
 graph_builder.add_edge("node_DataGet_time", "node_Advice")
+"""
+
+# 分野別分析＋提案
+# サイト内検索情報分析　＝＞　提案
+graph_builder.add_edge("node_toSuggestion_search", "node_Advice")
 
 # 全分野分析
 # # 全体データ取得　＝＞　解析
@@ -460,6 +502,17 @@ graph_builder.add_edge("node_Summarize", "node_Advice")
 
 # 解析　＝＞　終点
 graph_builder.add_edge("node_Advice", "node_End")
+graph_builder.add_edge("node_DataGet_search", "node_End")
+
+# 終点
+graph_builder.add_edge("node_DataGet_page", "node_End")
+graph_builder.add_edge("node_DataGet_traffic", "node_End")
+graph_builder.add_edge("node_DataGet_user", "node_End")
+graph_builder.add_edge("node_DataGet_device", "node_End")
+graph_builder.add_edge("node_DataGet_time", "node_End")
+graph_builder.add_edge("node_toSuggestion_search", "node_End")
+
+
 
 # Graphをコンパイル
 graph = graph_builder.compile()
