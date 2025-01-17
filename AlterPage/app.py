@@ -227,7 +227,7 @@ def call_Advice(llm, user_prompt):
     system_prompt_Analyze = PromptTemplate(
         input_variables = ["user_prompt"],
         template = (
-            txt_read("resource/rag_data/ga4Info.txt") + 
+            txt_read("resource/user_prompt/advice.txt") + 
             'この分析結果からブログ利用者を増やすにはブログにどんな改良が必要ですか？分析結果からわかる内容のみを使い、具体的な指示をしてください' + 
             "\n\nプロンプト: {user_prompt}"
         )
