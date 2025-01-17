@@ -7,7 +7,7 @@ import os
 COSMOS_DB_ENDPOINT = os.getenv("COSMOS_DB_ENDPOINT")
 COSMOS_DB_KEY = os.getenv("COSMOS_DB_KEY")
 COSMOS_DB_NAME = "my-database"
-CONTAINER_NAME = "my-container"
+CONTAINER_NAME = "Alterbooth_AA DOJO"
 
 app = func.FunctionApp()
 
@@ -15,7 +15,9 @@ app = func.FunctionApp()
 @app.route(route="data", auth_level=func.AuthLevel.ANONYMOUS)
 def GetDBInfo(req: func.HttpRequest) -> func.HttpResponse:
     # 日付範囲をリクエストパラメータから取得
-    data_range = req.params.get('data_range')
+    range = req.params.get('range')
+    # ディメンションのグループをリクエストパラメータから取得
+    group = req.params.get('group')
 
     # Cosmos DB から情報を取得
     try:
@@ -26,15 +28,40 @@ def GetDBInfo(req: func.HttpRequest) -> func.HttpResponse:
         # 出力用変数
         all_data = {}
 
-        if not data_range:
+        if not range and not group:
             # コンテナから全てのアイテムを取得
             items = list(container.read_all_items())
             for item in items:
                 all_data[CONTAINER_NAME] = items
 
-        if data_range:
+        elif not range and group:
+            # コンテナから全てのアイテムを取得
+            items = list(container.read_all_items())
+            # グループのデータリスト初期化
+            group_list = []
+            for item in items:
+                group_list.append({
+                    "id": item.get("id"),
+                    group: item.get(group, [])
+                })
+            all_data[CONTAINER_NAME] = group_list
+
+        elif range and group:
             # コンテナから指定したアイテムを取得
-            ITEM_ID = data_range
+            ITEM_ID = range
+            try:
+                item = container.read_item(item=ITEM_ID, partition_key=ITEM_ID)
+                # 「ページ関連情報」のみを取得
+                all_data[CONTAINER_NAME] = {
+                    "id": item.get("id"),
+                    group: item.get(group, [])
+                }
+            except exceptions.CosmosResourceNotFoundError:
+                all_data[CONTAINER_NAME] = 'Item Not Found'
+
+        else:
+            # コンテナから指定したアイテムを取得
+            ITEM_ID = range
             try:
                 item = container.read_item(item=ITEM_ID, partition_key=ITEM_ID)
                 all_data[CONTAINER_NAME] = item

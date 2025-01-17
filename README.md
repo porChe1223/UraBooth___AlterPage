@@ -1,7 +1,45 @@
+# AlterPage
+
+http://localhost:8000/
+
+## 実行
+
+chainlit run app.py
+
+## 環境構築
+
+python3 -m venv venv  
+. venv/bin/activate
+pip install -r requirements.txt
+
 # GA4DataGetter
 
 Google Analytics からのデータを取得する関数  
 https://ga4datagetter.azurewebsites.net/data
+
+## 使い方
+
+ほしいデータの範囲を指定したいときは、URL の末尾に  
+`?range=AAAA-BB-CCtoXXXX-YY-ZZ`
+と追加してください  
+例:  
+`?range=2024-12-01to2024-12-31`
+
+データの範囲指定がない場合は、今日から 1 月前までのレポートが取得されます
+
+以下のようなデータが取得されます  
+[  
+ {  
+ "id": "2024-12-16to2025-01-15",  
+ "日付の範囲": "2024-12-16to2025-01-15",  
+ "ページ関連情報": [],  
+ "トラフィックソース関連情報": [],  
+ "ユーザー行動関連情報": [],  
+ "サイト内検索関連情報": [],  
+ "デバイスおよびユーザ属性関連情報": [],  
+ "時間帯関連情報": []  
+ }  
+]
 
 ## 環境構築
 
@@ -45,15 +83,58 @@ Function App
 対象の関数を右クリック  
 Deploy to Function App...
 
-## その他
-
-今回は GA4 のレポート結果をメトリクス順に指定していない。理由はディメンションとメトリクスを 1:1 対応でレポートを作成させているからだ。  
-もしメトリクスを一気に複数選択し、レポート結果をメトリクス順に指定したい場合、コメントアウトの部分を戻せばできるようになる。
-
 # CosmosDBDataGetter
 
 Cosmos Database からのデータを取得する関数  
 https://cosmosdbdatagetter.azurewebsites.net/data
+
+## 使い方
+
+### 日付の範囲
+
+日付の範囲を指定したいときは、URL の末尾に  
+`?range=AAAA-BB-CCtoXXXX-YY-ZZ`
+と追加してください  
+例:  
+`?range=2024-12-1to2024-12-31`
+
+データの範囲指定がない場合は、今日から 1 月前までのレポートが取得されます
+
+### ディメンションのグループ
+
+グループを指定したいときは、URL の末尾に
+`?group=<グループ名>`
+と追加してください
+例:  
+`?group=ページ関連情報`
+グループ名
+
+- ページ関連情報
+- トラフィックソース関連情報
+- ユーザー行動関連情報
+- サイト内検索関連情報
+- デバイスおよびユーザ属性関連情報
+- 時間帯関連情報
+
+### 両方
+
+両方指定する場合は後者に&をつけてください
+例
+`?range=2024-12-1to2024-12-31&group=ページ関連情報`
+
+以下のようなデータが取得されます  
+[  
+ {  
+ 　"id": "2024-12-16to2025-01-15",  
+　 "日付の範囲": "2024-12-16to2025-01-15",  
+ 　"ページ関連情報": [],  
+　 "トラフィックソース関連情報": [],  
+　 "ユーザー行動関連情報": [],  
+　 "サイト内検索関連情報": [],  
+ 　"デバイスおよびユーザ属性関連情報": [],  
+　 "時間帯関連情報": []  
+ }  
+]
 
 ## 環境構築
 
@@ -120,7 +201,24 @@ DSL をエクスポート
 公開する  
 アプリを実行
 
-# LLMDataAnalyzer
+# LangChain
+
+## 環境構築
+
+- requirements.txt を作成し、以下を書き加える。openai 以外の AI を使う場合は随時そのライブラリをインストールするよう書き換える。
+
+```text
+langchain
+langchain-openai
+openai
+python-dotenv
+```
+
+- 仮想環境(venv)に移動する
+- `pip install -r requirements.txt`
+- `pip install langchain-community`
+- `pip install langchain-cli`
+- .env ファイルを作成して、LLM の API キーを格納
 
 ## 環境構築
 
