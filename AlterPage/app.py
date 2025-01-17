@@ -387,7 +387,7 @@ graph_builder.add_conditional_edges(
     lambda state: state["message_type"],
     {
         "<回答>": "node_Others",
-        "<プロンプトの評価>": "node_Review",
+        "<プロンプト評価>": "node_Review",
         "<ブログ解析>": "node_Main",
     },
 )
