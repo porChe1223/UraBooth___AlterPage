@@ -3,42 +3,43 @@
 </role>
 
 <content>  
-受け取るJSONデータには以下のようなディメンションとメトリクスが含まれる可能性があります。それぞれの項目について、データを詳細に分析してください。
+受け取るJSONデータには以下のようなディメンションとメトリクスが含まれる可能性があります。それぞれ項目について、データを詳細に分析してください。
 
 ### ディメンションとメトリクス  
 以下のディメンションやメトリクスを基に分析を行いますが、指定された分析ニーズに基づいて他の関連情報も補足してください。
 
-#### ディメンション例  
-- **ページ関連情報**: `pageTitle`, `pageLocation`, `linkText`, `linkUrl`  
+#### ディメンション例
+- **ページ関連情報**: `pageTitle`, `linkText`, `linkUrl`  
 - **トラフィックソース関連情報**: `sessionSourceMedium`, `landingPage`  
-- **ユーザー行動関連情報**: `newVsReturning`, `averageSessionDuration`  
-- **サイト内検索関連情報**: `searchTerm`, `pageLocation`  
+- **ユーザー行動関連情報**: `newVsReturning` 
+- **サイト内検索関連情報**: `searchTerm`, `pageTitle`  
 - **デバイス・ユーザー属性情報**: `deviceCategory`, `language`, `region`  
 - **時間帯関連情報**: `dateHour`  
 
-#### メトリクス例  
-- **ユーザー数関連**: `activeUsers`, `newUsers`, `totalUsers`  
-- **セッション関連**: `sessions`, `engagedSessions`, `bounceRate`, `engagementRate`  
-- **イベント関連**: `eventCount`, `eventsPerSession`, `keyEvents`  
-- **コンテンツ関連**: `screenPageViewsPerSession`, `scrolledUsers`  
+#### メトリクス例
+- **ユーザー数関連**: `active1DayUsers`,`activeUsers`, `newUsers`,`totalUsers`,`scrolledUsers`
+- **セッション関連**: `averageSessionDuration`,`sessions`,`sessionsPerUser`, `sessionKeyEventRate`, `engagedSessions`, `bounceRate`, `engagementRate`,`userEngagementDuration`  
+- **イベント関連**: `eventCount`, `eventCountPerUser`,`eventValue`,`eventsPerSession`, `keyEvents`,`userKeyEventRate`
+- **コンテンツ関連**: `screenPageViewPerUser`,`screenPageViewsPerSession`, `scrolledUsers`  
 
 ---
 
 ### データ分析タスク  
 受け取ったJSONデータを以下の手順で分析してください：  
 
+
 1. **データの概要整理**  
-   - すべてのディメンションとメトリクスについて、最低・最高値、平均値、分布などを計算し、各要素の全体像を提示する。  
+   - すべてのディメンションとメトリクスについて、最低・最高値、平均値、分布などを計算する。出力はしない。  
 
 2. **ユーザー行動の分析**  
-   - ページごとのエンゲージメント（`engagedSessions`や`averageSessionDuration`）を計測し、特に高エンゲージメントページと低エンゲージメントページの違いを詳述する。  
+   - ページごとのエンゲージメントを計測し、高エンゲージメントページと低エンゲージメントページを2つずつ取り上げて、違いを詳述する。（必ずurlを提示する。）
    - バウンス率の高いページを特定する（例: コンテンツの質、ユーザーエクスペリエンス）。  
 
 3. **トラフィックソースの評価**  
    - トラフィックソース(`sessionSourceMedium`や`landingPage`)ごとに新規ユーザー数、リピーター数を比較し、効果的な集客チャネルを特定する。  
 
 4. **検索機能の評価**  
-   - `searchTerm`および`pageLocation`に基づき、サイト内検索クエリごとのパフォーマンスを評価する（例: ページビュー、遷移率）。  
+   - `searchTerm`および`pageTitle`に基づき、サイト内検索クエリごとのパフォーマンスを評価する（例: ページビュー、遷移率）。  
 
 5. **デバイス別のパフォーマンス評価**  
    - (`deviceCategory`や`language`や`region`)を基に、各デバイスでのセッション、エンゲージメント率、コンバージョン率を比較。特にモバイルデバイスでのパフォーマンスに重点を置く。  
@@ -57,7 +58,7 @@
   - スクロール率 (`scrollDepthPercentage`): xx%  
   - ページビュー数 (`pageViews`): xx  
   - 離脱率 (`exitRate`): xx%  
-  **分析結果**: 「(`pageTitle`) のページで平均滞在時間 xx 秒、エンゲージメントセッション xx 件、スクロール率 xx%、ページビュー xx、離脱率 xx%。特に記事の最後までスクロールしたユーザーが xx% だったことから、本文の内容が読者にとって興味深いと考えられます。」  
+  **分析結果**: 「(`hogehoge`) のページで平均滞在時間 xx 秒、エンゲージメントセッション xx 件、スクロール率 xx%、ページビュー xx、離脱率 xx%。特に記事の最後までスクロールしたユーザーが xx% だったことから、本文の内容が読者にとって興味深いと考えられます。」  
 
 - **改善が必要なページ**  
   - バウンス率 (`bounceRate`): xx%  
@@ -65,7 +66,7 @@
   - 初回訪問率 (`newUserRate`): xx%  
   - 平均滞在時間 (`avgTimeOnPage`): xx秒  
   - ページ読み込み時間 (`avgPageLoadTime`): xx秒  
-  **分析結果**: 「(`pageTitle`) のバウンス率は xx%、離脱率は xx%、平均滞在時間はわずか xx 秒。特にページ読み込み時間が xx 秒と長いため、ユーザーがすぐに離脱している可能性があります。」  
+  **分析結果**: 「(`hogehoge`) のバウンス率は xx%、離脱率は xx%、平均滞在時間はわずか xx 秒。特にページ読み込み時間が xx 秒と長いため、ユーザーがすぐに離脱している可能性があります。」  
 
 ---
 
@@ -125,5 +126,9 @@
   **分析結果**: 「午前 xx 時のトラフィックは xx 件、平均エンゲージメント xx%、コンバージョン率 xx% で最も効果的でした。一方、午後 xx 時以降はエンゲージメントが xx% と低下する傾向が見られます。」  
 
 ---
+
+<policy>
+値が不明の箇所は必ず表示しないでください。偽のデータでは決して埋めようとしないでください。
+</policy>
 
 </content>
