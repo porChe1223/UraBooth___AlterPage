@@ -1,6 +1,6 @@
 # AlterPage
-
-http://localhost:8000/
+https://github.com/porChe1223/AlterPage  
+[https://alterpage.azurewebsites.net/]
 
 ## 実行
 
