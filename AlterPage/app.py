@@ -271,9 +271,12 @@ class State(TypedDict):
 #==============
 # 開始ノード（最初の動作を決める）
 def node_Start(state: State, config: RunnableConfig):
-    prompt = state["message"]
-    response = select_What_to_do(llm4, prompt)
-    return {"message_type": response.content, "messages": prompt}
+     prompt = state["message"]
+     if 'プロンプト' in prompt and '評価' in prompt:
+        return {"message_type": "<プロンプト評価>", "messages": prompt}
+     else:
+        response = select_What_to_do(llm4, prompt)
+        return {"message_type": response.content, "messages": prompt}
 
 # 標準回答ノード
 def node_Others(state: State, config: RunnableConfig):
